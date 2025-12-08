@@ -1,14 +1,13 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 
 Variants {
     model: Quickshell.screens
 
     PanelWindow {
         id: win
-        
+
         // 1. Link to the screen
         screen: modelData
 
@@ -30,7 +29,7 @@ Variants {
         // Content
         Wallpaper {
             id: wallpaper
-            anchors.fill: parent 
+            anchors.fill: parent
         }
     }
 }
