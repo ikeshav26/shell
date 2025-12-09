@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell.Hyprland
 import "../core"
-import "../services"
 
 Rectangle {
     id: barRoot

@@ -9,6 +9,7 @@ PanelWindow {
     id: root
 
     required property Colors colors
+
     // --- Window Configuration ---
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
@@ -31,25 +32,52 @@ PanelWindow {
     }
 
     property string query: ""
+    
+    // --- 2. IMPROVED SEARCH LOGIC ---
     property var filteredApps: {
         var apps = DesktopEntries.applications.values;
-        return apps.filter(app => {
+        var q = query.toLowerCase().trim();
+
+        if (q === "") return [];
+
+        // Step 1: Filter (Keep valid results)
+        var matches = apps.filter(app => {
             if (app.noDisplay) return false;
-            if (query === "") return false;
-            return app.name.toLowerCase().includes(query.toLowerCase());
+            return app.name.toLowerCase().includes(q);
         });
+
+        // Step 2: Smart Sort (Rank by Relevance)
+        matches.sort((a, b) => {
+            var nameA = a.name.toLowerCase();
+            var nameB = b.name.toLowerCase();
+
+            // A. Exact Match gets top priority
+            if (nameA === q && nameB !== q) return -1;
+            if (nameB === q && nameA !== q) return 1;
+
+            // B. "Starts With" gets second priority
+            // e.g. "Ves" -> "Vesktop" (Starts) vs "Drives" (Contains)
+            var startA = nameA.startsWith(q);
+            var startB = nameB.startsWith(q);
+
+            if (startA && !startB) return -1; // A wins
+            if (!startA && startB) return 1;  // B wins
+
+            // C. Tie-breaker: Alphabetical
+            return nameA.localeCompare(nameB);
+        });
+
+        return matches;
     }
 
     // --- MAIN CONTAINER ---
     Rectangle {
         id: mainContainer
-        width: 480 // Compact Width
+        width: 480 
         anchors.centerIn: parent
 
-        // Height: Header (60) + List (Dynamic)
         height: 60 + (appList.count > 0 ? Math.min(appList.count * 44, 350) : 0)
 
-        // STYLE: Tokyo Night Matte
         color: colors.bg
         border.color: colors.muted
         border.width: 1
@@ -97,7 +125,6 @@ PanelWindow {
                     }
                 }
 
-                // Separator Line
                 Rectangle {
                     anchors.bottom: parent.bottom
                     width: parent.width
@@ -121,7 +148,7 @@ PanelWindow {
 
                 delegate: Rectangle {
                     width: appList.width
-                    height: 44 // Compact Row
+                    height: 44
                     color: "transparent"
 
                     MouseArea {
@@ -131,35 +158,27 @@ PanelWindow {
                         onClicked: { modelData.execute(); root.visible = false }
                     }
 
-                    // --- SELECTION BACKGROUND ---
                     Rectangle {
                         anchors.fill: parent
                         anchors.margins: 4
                         radius: 6
-                        // Muted background when selected (low opacity)
                         color: ListView.isCurrentItem ? Qt.rgba(colors.muted.r, colors.muted.g, colors.muted.b, 0.3) : "transparent"
                         
-                        // --- THE FRONT BAR (Accent) ---
                         Rectangle {
                             width: 3
-                            height: 20 // Taller bar for visibility
+                            height: 20
                             radius: 2
-                            // Uses Cyan to POP against the purple text
                             color: colors.cyan 
-                            
                             anchors.left: parent.left
                             anchors.leftMargin: 6
                             anchors.verticalCenter: parent.verticalCenter
-                            
-                            // Only visible when selected
                             visible: parent.parent.ListView.isCurrentItem
                         }
                     }
 
-                    // --- CONTENT ---
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 20 // Space for the accent bar
+                        anchors.leftMargin: 20
                         anchors.rightMargin: 16
                         spacing: 12
 
@@ -175,9 +194,7 @@ PanelWindow {
 
                         Text {
                             text: modelData.name
-                            // Selected: Purple | Unselected: Foreground (White-ish)
                             color: ListView.isCurrentItem ? colors.purple : colors.fg
-                            
                             font.bold: true
                             font.pixelSize: 14
                             Layout.fillWidth: true
