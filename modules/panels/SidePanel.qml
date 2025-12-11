@@ -5,22 +5,20 @@ import Qt5Compat.GraphicalEffects
 import Quickshell
 import Quickshell.Wayland
 import "../../core"
-import "../../notifications"
+import "../../core/common"
+import "../../modules/notifications"
 
 PanelWindow {
     id: root
 
-    // --- DEPENDENCIES ---
     required property var globalState
     required property var notifManager
 
     readonly property int topBarHeight: 50
 
-    // --- THEME ---
     QtObject {
         id: theme
 
-        // Colors
         property color bg:                "#1A1D26"
         property color surface:           "#252932"
         property color tile:              "#2F333D"
@@ -40,49 +38,37 @@ PanelWindow {
         property color sliderThumb:       "#FFFFFF"
         property color sliderFill:        "#CBA6F7"
 
-        // Dimensions
-        property int panelWidth:          400
-        property int borderRadius:        20
-        property int contentMargins:      24
-        property int spacing:             20
+        property int panelWidth:          420
+        property int borderRadius:        24
+        property int contentMargins:      28
+        property int spacing:             24
         property int toggleHeight:        88
         property int sliderHeight:        64
         property int notificationHeight:  80
         property int headerAvatarSize:    48
         property int toggleIconSize:      24
         property int sliderIconSize:      20
+        property int sectionSpacing:      32
     }
 
 
-    // --- WINDOW SETUP ---
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
 
-    // Only visible when open or animating
-    visible: globalState.sidePanelOpen || slideAnim.running || slideTranslate.x < content.width
+    visible: root.globalState.sidePanelOpen || openAnim.running || closeAnim.running || slideTranslate.x < content.width
 
-    // LAYER SHELL CONFIG
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "matte-dashboard"
-    WlrLayershell.exclusiveZone: -1 
-    
-    // FIX 1: KEYBOARD FOCUS
-    // "OnDemand" allows us to request focus. "None" blocked all keys.
-    WlrLayershell.keyboardFocus: WlrLayershell.KeyboardFocus.OnDemand
+    WlrLayershell.exclusiveZone: -1
 
-    // FIX 2: ESCAPE KEY HANDLER
-    // We must ensure 'root' has focus to catch this key.
     Keys.onEscapePressed: {
         globalState.sidePanelOpen = false
     }
 
-    // FIX 3: FORCE FOCUS LOGIC
-    // When panel opens, we grab focus so Escape works immediately.
     Connections {
-        target: globalState
+        target: root.globalState
         function onSidePanelOpenChanged() {
-            if (globalState.sidePanelOpen) {
-                // Wait one frame for visibility to apply, then force focus
+            if (root.globalState.sidePanelOpen) {
                 requestFocusTimer.start()
             }
         }
@@ -92,29 +78,25 @@ PanelWindow {
         id: requestFocusTimer
         interval: 10
         repeat: false
-        onTriggered: {
-            root.forceActiveFocus()
-        }
     }
 
-    // --- DIMMER (BACKGROUND) ---
     Rectangle {
         anchors.fill: parent
         color: "black"
-        opacity: globalState.sidePanelOpen ? 0.4 : 0
-        Behavior on opacity { NumberAnimation { duration: 350 } }
-        
-        MouseArea {
-            anchors.fill: parent
-            onClicked: globalState.sidePanelOpen = false
+        opacity: root.globalState.sidePanelOpen ? 0.5 : 0
+        Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+
+        layer.enabled: true
+        layer.effect: FastBlur {
+            radius: root.globalState.sidePanelOpen ? 20 : 0
+            Behavior on radius { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
         }
     }
 
-    // --- MAIN CONTENT PANEL ---
     Rectangle {
         id: content
         width: theme.panelWidth
-        
+
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.right: parent.right
@@ -128,536 +110,68 @@ PanelWindow {
         border.color: theme.border
         clip: true
 
-        MouseArea {
-            anchors.fill: parent
-            hoverEnabled: true
+        layer.enabled: true
+        layer.effect: DropShadow {
+            transparentBorder: true
+            horizontalOffset: 0
+            verticalOffset: 8
+            radius: 32
+            samples: 33
+            color: Qt.rgba(0, 0, 0, 0.4)
         }
 
         transform: Translate {
             id: slideTranslate
-            x: globalState.sidePanelOpen ? 0 : (content.width + 50)
+            x: root.globalState.sidePanelOpen ? 0 : (content.width + 50)
+
             Behavior on x {
-                SpringAnimation {
-                    id: slideAnim
-                    spring: 2
-                    damping: 0.25
-                    epsilon: 0.5
-                    mass: 1
-                }
+                animation: root.globalState.sidePanelOpen ? openAnim : closeAnim
             }
         }
 
-        // --- CONTENT LAYOUT ---
-        ColumnLayout {
+        SpringAnimation {
+            id: openAnim
+            spring: 7.0
+            damping: 0.15
+            epsilon: 0.1
+            mass: 0.2
+            velocity: 2000
+        }
+
+        NumberAnimation {
+            id: closeAnim
+            duration: 1000
+            easing.type: Easing.InQuart
+        }
+
+        Flickable {
             anchors.fill: parent
             anchors.margins: theme.contentMargins
-            spacing: theme.spacing
-
-            // === HEADER ===
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 16
-
-                // Avatar Square with Arch Logo
-                Rectangle {
-                    Layout.preferredWidth: theme.headerAvatarSize
-                    Layout.preferredHeight: theme.headerAvatarSize
-                    radius: 12
-                    
-                    gradient: Gradient {
-                        GradientStop { position: 0.0; color: theme.tileActive }
-                        GradientStop { position: 1.0; color: theme.accentActive }
-                    }
-                    
-                    layer.enabled: true
-                    layer.effect: DropShadow {
-                        transparentBorder: true
-                        horizontalOffset: 0
-                        verticalOffset: 2
-                        radius: 8
-                        samples: 17
-                        color: Qt.rgba(0, 0, 0, 0.3)
-                    }
-                    
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰣇"
-                        font.pixelSize: 28
-                        font.family: "Symbols Nerd Font"
-                        color: "#FFFFFF"
-                    }
-                }
-
-                // User Info
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 4
-                    
-                    Text {
-                        text: Quickshell.env("USER")
-                        color: theme.text
-                        font.bold: true
-                        font.pixelSize: 18
-                        font.capitalization: Font.Capitalize
-                    }
-                    
-                    Text {
-                        text: "Matte Shell • " + Qt.formatTime(new Date(), "hh:mm")
-                        color: theme.secondary
-                        font.pixelSize: 13
-                    }
-                }
-
-                Item { Layout.fillWidth: true }
-
-                // Power Button
-                Rectangle {
-                    Layout.preferredWidth: 40
-                    Layout.preferredHeight: 40
-                    radius: 8
-                    color: powerBtn.pressed ? theme.tile : "transparent"
-                    border.width: 1
-                    border.color: theme.border
-                    
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰐥"
-                        font.pixelSize: 18
-                        font.family: "Symbols Nerd Font"
-                        color: theme.urgent
-                    }
-                    
-                    TapHandler {
-                        id: powerBtn
-                        onTapped: powerMenu.isOpen = true
-                    }
-                }
-            }
-
-            // === TOGGLES ===
-            GridLayout {
-                Layout.fillWidth: true
-                columns: 2
-                rowSpacing: 12
-                columnSpacing: 12
-                
-                ToggleButton {
-                    label: "WiFi"
-                    sublabel: "Connected"
-                    icon: "󰖩"
-                    active: true
-                    showChevron: true
-                    Layout.fillWidth: true
-                }
-                
-                ToggleButton {
-                    label: "Bluetooth"
-                    sublabel: "Off"
-                    icon: "󰂯"
-                    active: false
-                    showChevron: true
-                    Layout.fillWidth: true
-                }
-                
-                ToggleButton {
-                    label: "Do Not Disturb"
-                    sublabel: "Off"
-                    icon: "󰂛"
-                    active: false
-                    showChevron: false
-                    Layout.fillWidth: true
-                }
-                
-                ToggleButton {
-                    label: "Microphone"
-                    sublabel: "Active"
-                    icon: "󰍬"
-                    active: true
-                    showChevron: false
-                    Layout.fillWidth: true
-                }
-            }
-
-            // === SLIDERS ===
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 16
-                
-                SliderControl {
-                    label: "Volume"
-                    icon: "󰕾"
-                    value: 0.65
-                }
-                
-                SliderControl {
-                    label: "Brightness"
-                    icon: "󰃠"
-                    value: 0.80
-                }
-            }
-
-            // === NOTIFICATIONS ===
-            Rectangle {
-                Layout.fillWidth: true
-                height: 1
-                color: theme.border
-            }
+            contentHeight: contentLayout.height
+            clip: true
+            interactive: true
+            boundsBehavior: Flickable.StopAtBounds
+            flickableDirection: Flickable.VerticalFlick
 
             ColumnLayout {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                spacing: 12
-                
+                id: contentLayout
+                width: parent.width
+                spacing: theme.spacing
+
                 RowLayout {
                     Layout.fillWidth: true
-                    
-                    Text {
-                        text: "Notifications"
-                        color: theme.text
-                        font.pixelSize: 16
-                        font.weight: Font.Medium
-                    }
-                    
-                    Item { Layout.fillWidth: true }
-                    
-                    Text {
-                        text: "Clear all"
-                        color: theme.accent
-                        font.pixelSize: 13
-                        font.weight: Font.Medium
-                        visible: notifManager.notifications.count > 0
-                        
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: notifManager.clearHistory()
-                        }
-                    }
-                }
-
-                ListView {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    clip: true
-                    spacing: 12
-                    model: notifManager.notifications
-                    
-                    Component.onCompleted: {
-                        console.log("ListView initialized. Model count:", model.count)
-                    }
-                    
-                    Connections {
-                        target: notifManager.notifications
-                        function onCountChanged() {
-                            console.log("Notifications count changed:", notifManager.notifications.count)
-                        }
-                    }
+                    spacing: 16
 
                     Rectangle {
-                        visible: parent.count === 0
-                        anchors.centerIn: parent
-                        width: parent.width
-                        height: 100
-                        color: "transparent"
-                        
-                        ColumnLayout {
-                            anchors.centerIn: parent
-                            spacing: 8
-                            
-                            Text {
-                                text: "󰂚"
-                                font.pixelSize: 32
-                                font.family: "Symbols Nerd Font"
-                                color: theme.muted
-                                Layout.alignment: Qt.AlignHCenter
-                            }
-                            
-                            Text {
-                                text: "No notifications"
-                                color: theme.muted
-                                font.pixelSize: 14
-                                Layout.alignment: Qt.AlignHCenter
-                            }
-                        }
-                    }
-
-                    delegate: Rectangle {
-                        required property var model
-                        required property int index
-                        
-                        property int notifId: model.id
-                        
-                        width: ListView.view.width
-                        height: theme.notificationHeight
-                        color: theme.surface
+                        Layout.preferredWidth: theme.headerAvatarSize
+                        Layout.preferredHeight: theme.headerAvatarSize
                         radius: 12
-                        
-                        Component.onCompleted: {
-                            console.log("Created delegate at index", index, "with ID:", notifId, "summary:", model.summary)
+
+                        gradient: Gradient {
+                            GradientStop { position: 0.0; color: theme.tileActive }
+                            GradientStop { position: 1.0; color: theme.accentActive }
                         }
-                        
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.margins: 16
-                            spacing: 12
 
-                            // Icon
-                            Rectangle {
-                                Layout.preferredWidth: 40
-                                Layout.preferredHeight: 40
-                                color: theme.tile
-                                radius: 8
-                                
-                                Image {
-                                    id: notifIcon
-                                    anchors.centerIn: parent
-                                    width: 24
-                                    height: 24
-                                    fillMode: Image.PreserveAspectFit
-                                    smooth: true
-                                    source: {
-                                        var img = model.image || ""
-                                        var icon = model.appIcon || ""
-                                        
-                                        // Prioritize image over icon
-                                        if (img !== "") {
-                                            if (img.startsWith("/") || img.startsWith("file://")) {
-                                                return img.startsWith("file://") ? img : "file://" + img
-                                            }
-                                        }
-                                        
-                                        // Use appIcon if no image
-                                        if (icon !== "") {
-                                            if (icon.startsWith("/") || icon.startsWith("file://")) {
-                                                return icon.startsWith("file://") ? icon : "file://" + icon
-                                            }
-                                            // It's an icon name, use icon provider
-                                            return "image://icon/" + icon
-                                        }
-                                        
-                                        return ""
-                                    }
-                                    visible: status === Image.Ready
-                                    cache: false
-                                }
-                                
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "󰂚"
-                                    font.pixelSize: 24
-                                    font.family: "Symbols Nerd Font"
-                                    color: theme.iconMuted
-                                    visible: !notifIcon.visible
-                                }
-                            }
-
-                            // Content
-                            ColumnLayout {
-                                Layout.fillWidth: true
-                                spacing: 4
-                                
-                                Text {
-                                    text: model.summary || ""
-                                    color: theme.text
-                                    font.pixelSize: 14
-                                    font.weight: Font.Medium
-                                    elide: Text.ElideRight
-                                    Layout.fillWidth: true
-                                }
-                                
-                                Text {
-                                    text: model.body || ""
-                                    color: theme.secondary
-                                    font.pixelSize: 13
-                                    elide: Text.ElideRight
-                                    maximumLineCount: 1
-                                    Layout.fillWidth: true
-                                }
-                            }
-
-                            // Close Button
-                            Rectangle {
-                                Layout.preferredWidth: 24
-                                Layout.preferredHeight: 24
-                                color: closeArea.containsMouse ? theme.tile : "transparent"
-                                radius: 12
-                                
-                                Behavior on color { ColorAnimation { duration: 150 } }
-                                
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "󰅖"
-                                    font.pixelSize: 14
-                                    font.family: "Symbols Nerd Font"
-                                    color: theme.secondary
-                                }
-                                
-                                MouseArea {
-                                    id: closeArea
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    
-                                    onClicked: {
-                                        console.log("Close clicked for ID:", notifId, "at index:", index)
-                                        notifManager.removeById(notifId)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // --- REUSABLE COMPONENTS ---
-
-    component ToggleButton: Rectangle {
-        property string label: ""
-        property string sublabel: ""
-        property string icon: ""
-        property bool active: false
-        property bool showChevron: false
-        
-        implicitHeight: theme.toggleHeight
-        radius: 16
-        color: active ? theme.tileActive : theme.tile
-        border.width: 1
-        border.color: active ? theme.tileActive : theme.border
-        
-        Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.OutQuad } }
-        Behavior on border.color { ColorAnimation { duration: 200 } }
-        
-        RowLayout {
-            anchors.fill: parent
-            anchors.margins: 20
-            spacing: 14
-            
-            // Icon
-            Text {
-                text: icon
-                font.pixelSize: theme.toggleIconSize
-                font.family: "Symbols Nerd Font"
-                color: active ? theme.bg : theme.secondary
-                Behavior on color { ColorAnimation { duration: 200 } }
-            }
-            
-            // Labels
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 4
-                
-                Text {
-                    text: label
-                    font.pixelSize: 14
-                    font.weight: Font.Medium
-                    color: active ? theme.bg : theme.text
-                    elide: Text.ElideRight
-                    Layout.fillWidth: true
-                    Behavior on color { ColorAnimation { duration: 200 } }
-                }
-                
-                Text {
-                    text: sublabel
-                    font.pixelSize: 12
-                    color: active ? Qt.rgba(theme.bg.r, theme.bg.g, theme.bg.b, 0.7) : theme.secondary
-                    elide: Text.ElideRight
-                    Layout.fillWidth: true
-                    visible: sublabel !== ""
-                    Behavior on color { ColorAnimation { duration: 200 } }
-                }
-            }
-            
-            // Chevron
-            Text {
-                text: "󰅂"
-                font.pixelSize: 16
-                font.family: "Symbols Nerd Font"
-                color: active ? theme.bg : theme.iconMuted
-                visible: showChevron
-                Behavior on color { ColorAnimation { duration: 200 } }
-            }
-        }
-        
-        TapHandler {
-            onTapped: active = !active
-        }
-    }
-
-    component SliderControl: Rectangle {
-        property string label: ""
-        property string icon: ""
-        property real value: 0.5
-        
-        Layout.fillWidth: true
-        implicitHeight: theme.sliderHeight
-        color: theme.tile
-        radius: 12
-        
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 16
-            spacing: 10
-            
-            // Header
-            RowLayout {
-                Layout.fillWidth: true
-                
-                Text {
-                    text: icon
-                    font.pixelSize: theme.sliderIconSize
-                    font.family: "Symbols Nerd Font"
-                    color: theme.text
-                }
-                
-                Text {
-                    text: label
-                    font.pixelSize: 14
-                    font.weight: Font.Medium
-                    color: theme.text
-                    Layout.fillWidth: true
-                }
-                
-                Text {
-                    text: Math.round(value * 100) + "%"
-                    font.pixelSize: 14
-                    font.weight: Font.Medium
-                    color: theme.secondary
-                }
-            }
-            
-            // Slider Track
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 6
-                radius: 3
-                color: theme.sliderTrack
-                
-                Rectangle {
-                    height: parent.height
-                    width: parent.width * value
-                    radius: 3
-                    color: theme.sliderFill
-                    
-                    Behavior on width {
-                        NumberAnimation {
-                            duration: 150
-                            easing.type: Easing.OutQuad
-                        }
-                    }
-                    
-                    // Thumb
-                    Rectangle {
-                        width: 20
-                        height: 20
-                        radius: 10
-                        color: theme.sliderThumb
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        
                         layer.enabled: true
                         layer.effect: DropShadow {
                             transparentBorder: true
@@ -665,20 +179,256 @@ PanelWindow {
                             verticalOffset: 2
                             radius: 8
                             samples: 17
-                            color: Qt.rgba(0, 0, 0, 0.2)
+                            color: Qt.rgba(0, 0, 0, 0.3)
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "󰣇"
+                            font.pixelSize: 28
+                            font.family: "Symbols Nerd Font"
+                            color: "#FFFFFF"
+                        }
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 4
+
+                        Text {
+                            text: Quickshell.env("USER")
+                            color: theme.text
+                            font.bold: true
+                            font.pixelSize: 18
+                            font.capitalization: Font.Capitalize
+                        }
+
+                        Text {
+                            text: "Matte Shell • " + Qt.formatTime(new Date(), "hh:mm")
+                            color: theme.secondary
+                            font.pixelSize: 13
+                        }
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    Rectangle {
+                        Layout.preferredWidth: 40
+                        Layout.preferredHeight: 40
+                        radius: 8
+                        color: powerBtn.pressed ? theme.tile : "transparent"
+                        border.width: 1
+                        border.color: theme.border
+
+                        Behavior on color { ColorAnimation { duration: 150 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "󰐥"
+                            font.pixelSize: 18
+                            font.family: "Symbols Nerd Font"
+                            color: theme.urgent
+                        }
+
+                        TapHandler {
+                            id: powerBtn
+                            onTapped: powerMenu.isOpen = true
                         }
                     }
                 }
-                
-                MouseArea {
-                    anchors.fill: parent
-                    
-                    onPositionChanged: function(mouse) {
-                        value = Math.max(0, Math.min(1, mouse.x / width))
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 16
+
+                    Text {
+                        text: "Quick Settings"
+                        color: theme.text
+                        font.pixelSize: 14
+                        font.weight: Font.Medium
+                        opacity: 0.8
                     }
-                    
-                    onPressed: function(mouse) {
-                        value = Math.max(0, Math.min(1, mouse.x / width))
+
+                    GridLayout {
+                        Layout.fillWidth: true
+                        columns: 2
+                        rowSpacing: 12
+                        columnSpacing: 12
+
+                        ToggleButton {
+                            label: "WiFi"
+                            sublabel: "Connected"
+                            icon: "󰖩"
+                            active: true
+                            showChevron: true
+                            theme: theme
+                            Layout.fillWidth: true
+                        }
+
+                        ToggleButton {
+                            label: "Bluetooth"
+                            sublabel: "Off"
+                            icon: "󰂯"
+                            active: false
+                            showChevron: true
+                            theme: theme
+                            Layout.fillWidth: true
+                        }
+
+                        ToggleButton {
+                            label: "Airplane Mode"
+                            sublabel: "Off"
+                            icon: "󰀝"
+                            active: false
+                            showChevron: false
+                            theme: theme
+                            Layout.fillWidth: true
+                        }
+
+                        ToggleButton {
+                            label: "Night Mode"
+                            sublabel: "Off"
+                            icon: "󰖔"
+                            active: false
+                            showChevron: false
+                            theme: theme
+                            Layout.fillWidth: true
+                        }
+
+                        ToggleButton {
+                            label: "Do Not Disturb"
+                            sublabel: "Off"
+                            icon: "󰂛"
+                            active: false
+                            showChevron: false
+                            theme: theme
+                            Layout.fillWidth: true
+                        }
+
+                        ToggleButton {
+                            label: "Microphone"
+                            sublabel: "Active"
+                            icon: "󰍬"
+                            active: true
+                            showChevron: false
+                            theme: theme
+                            Layout.fillWidth: true
+                        }
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 16
+
+                    Text {
+                        text: "Audio & Display"
+                        color: theme.text
+                        font.pixelSize: 14
+                        font.weight: Font.Medium
+                        opacity: 0.8
+                    }
+
+                    SliderControl {
+                        label: "Volume"
+                        icon: "󰕾"
+                        value: 0.65
+                        theme: theme
+                    }
+
+                    SliderControl {
+                        label: "Brightness"
+                        icon: "󰃠"
+                        value: 0.80
+                        theme: theme
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.topMargin: theme.sectionSpacing
+                    Layout.preferredHeight: 1
+                    color: theme.border
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    spacing: 12
+
+                    RowLayout {
+                        Layout.fillWidth: true
+
+                        Text {
+                            text: "Notifications"
+                            color: theme.text
+                            font.pixelSize: 16
+                            font.weight: Font.Medium
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        Text {
+                            text: "Clear all"
+                            color: theme.accent
+                            font.pixelSize: 13
+                            font.weight: Font.Medium
+                        visible: root.notifManager.notifications.count > 0
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.notifManager.clearHistory()
+                            }
+                        }
+                    }
+
+                    ListView {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        clip: true
+                        spacing: 12
+                        model: root.notifManager.notifications
+
+                        Rectangle {
+                            visible: parent.count === 0
+                            anchors.centerIn: parent
+                            width: parent.width
+                            height: 100
+                            color: "transparent"
+
+                            ColumnLayout {
+                                anchors.centerIn: parent
+                                spacing: 8
+
+                                Text {
+                                    text: "󰂚"
+                                    font.pixelSize: 32
+                                    font.family: "Symbols Nerd Font"
+                                    color: theme.muted
+                                    Layout.alignment: Qt.AlignHCenter
+                                }
+
+                                Text {
+                                    text: "No notifications"
+                                    color: theme.muted
+                                    font.pixelSize: 14
+                                    Layout.alignment: Qt.AlignHCenter
+                                }
+                            }
+                        }
+
+                        delegate: NotificationItem {
+                            required property var model
+                            required property int index
+                            notifId: model.id
+                            summary: model.summary || ""
+                            body: model.body || ""
+                            image: model.image || ""
+                            appIcon: model.appIcon || ""
+                            theme: theme
+                            onRemoveRequested: root.notifManager.removeById(notifId)
+                        }
                     }
                 }
             }
