@@ -231,7 +231,7 @@ PanelWindow {
                     
                     TapHandler {
                         id: powerBtn
-                        onTapped: console.log("Power Clicked")
+                        onTapped: powerMenu.isOpen = true
                     }
                 }
             }
@@ -637,5 +637,9 @@ PanelWindow {
                 }
             }
         }
+    }
+
+    PowerMenu {
+        id: powerMenu
     }
 }
