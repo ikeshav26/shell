@@ -1,0 +1,48 @@
+import QtQuick
+import Quickshell
+import qs.Modules.Bar
+import qs.Services
+
+Variants {
+    id: root
+    
+    required property Context context
+    
+    model: Quickshell.screens
+
+    PanelWindow {
+        property var modelData
+        screen: modelData
+
+        anchors {
+            top: true
+            left: true
+            right: true
+        }
+
+        implicitHeight: 34
+
+        margins {
+            top: 5
+            bottom: 0
+            left: 8
+            right: 8
+        }
+
+        color: "transparent"
+
+        Bar {
+            colors: root.context.colors
+            fontFamily: root.context.config.fontFamily
+            fontSize: root.context.config.fontSize
+            kernelVersion: root.context.os.version
+            cpuUsage: root.context.cpu.usage
+            memUsage: root.context.mem.usage
+            diskUsage: root.context.disk.usage
+            volumeLevel: root.context.volume.level
+            activeWindow: root.context.activeWindow.title
+            currentLayout: root.context.layout.layout
+            time: root.context.time.currentTime
+        }
+    }
+}

@@ -3,12 +3,13 @@ import Qt.labs.folderlistmodel
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.Services
 
 Singleton {
     id: root
 
     // Default wallpaper directory
-    property string defaultDirectory: Quickshell.env("HOME") + "/Pictures/wallpapers"
+    property string defaultDirectory: Config.wallpaperDirectory
     
     // Current wallpapers per screen (cache)
     property var currentWallpapers: ({})

@@ -4,8 +4,8 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
-import "../../core"
-import "../../services"
+import qs.Core
+import qs.Services
 
 PanelWindow {
     id: root

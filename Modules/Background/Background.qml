@@ -7,6 +7,7 @@ Variants {
 
     PanelWindow {
         id: win
+        property var modelData
 
         // 1. Link to the screen
         screen: modelData

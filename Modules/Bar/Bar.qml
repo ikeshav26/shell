@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
-import "../../core"
+import qs.Core
 
 Rectangle {
     id: barRoot
@@ -65,7 +65,7 @@ Rectangle {
                 anchors.centerIn: parent
                 width: 18
                 height: 18
-                source: "file:///etc/xdg/quickshell/mannu/assets/arch.svg"
+                source: "../../Assets/arch.svg"
                 fillMode: Image.PreserveAspectFit
                 opacity: 0.9
             }
@@ -155,34 +155,41 @@ Rectangle {
                 highlightMoveDuration: 300
                 highlightMoveVelocity: -1
 
-                currentIndex: (Hyprland.focusedWorkspace.id - 1)
+                currentIndex: (Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id - 1 : 0)
                 model: 999
 
-                delegate: Rectangle {
+                delegate: Item {
                     property int wsIndex: index + 1
                     property var workspace: Hyprland.workspaces.values.find(ws => ws.id === wsIndex) ?? null
                     property bool isActive: wsList.currentIndex === index
                     property bool hasWindows: workspace !== null
 
-                    height: 16
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: isActive ? 32 : 16
-                    radius: height / 2
+                    height: wsList.height
+                    width: indicator.width
 
-                    color: (isActive || hasWindows) ? colors.purple : "transparent"
-                    border.color: (!isActive && !hasWindows) ? colors.muted : "transparent"
-                    border.width: (!isActive && !hasWindows) ? 2 : 0
+                    Rectangle {
+                        id: indicator
+                        anchors.centerIn: parent
+                        
+                        height: 16
+                        width: parent.isActive ? 32 : 16
+                        radius: height / 2
 
-                    Behavior on width {
-                        NumberAnimation {
-                            duration: 300
-                            easing.type: Easing.OutBack
-                            easing.overshoot: 1.2
+                        color: (parent.isActive || parent.hasWindows) ? colors.purple : "transparent"
+                        border.color: (!parent.isActive && !parent.hasWindows) ? colors.muted : "transparent"
+                        border.width: (!parent.isActive && !parent.hasWindows) ? 2 : 0
+
+                        Behavior on width {
+                            NumberAnimation {
+                                duration: 300
+                                easing.type: Easing.OutBack
+                                easing.overshoot: 1.2
+                            }
                         }
-                    }
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: 200
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: 200
+                            }
                         }
                     }
 

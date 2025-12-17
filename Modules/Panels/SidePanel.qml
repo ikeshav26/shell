@@ -4,9 +4,9 @@ import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
 import Quickshell
 import Quickshell.Wayland
-import "../../core"
-import "../../core/common"
-import "../../modules/notifications"
+import qs.Core
+import qs.Widgets
+import qs.Modules.Notifications
 
 PanelWindow {
     id: root
@@ -136,17 +136,16 @@ PanelWindow {
 
         SpringAnimation {
             id: openAnim
-            spring: 7.0
-            damping: 0.15
+            spring: 4.0
+            damping: 0.2
             epsilon: 0.1
-            mass: 0.2
-            velocity: 2000
+            mass: 0.5
         }
 
         NumberAnimation {
             id: closeAnim
-            duration: 1000
-            easing.type: Easing.InQuart
+            duration: 350
+            easing.type: Easing.OutQuart
         }
 
         Flickable {

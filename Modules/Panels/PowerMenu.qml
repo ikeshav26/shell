@@ -18,7 +18,7 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "matte-power-menu"
     WlrLayershell.exclusiveZone: -1
-    WlrLayershell.keyboardFocus: WlrLayershell.KeyboardFocus.OnDemand
+    // WlrLayershell.keyboardFocus: WlrLayershell.KeyboardFocus.OnDemand
 
     Keys.onEscapePressed: globalState.powerMenuOpen = false
 

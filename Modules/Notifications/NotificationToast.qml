@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects // Required for DropShadow
 import Quickshell
 import Quickshell.Wayland
-import "../../core"
+import qs.Core
 
 PanelWindow {
     id: toast
@@ -26,8 +26,8 @@ PanelWindow {
     // --- WINDOW SETUP ---
     visible: manager.popupVisible || content.opacity > 0
     
-    width: 380
-    height: content.height
+    implicitWidth: 380
+    implicitHeight: content.implicitHeight
     color: "transparent"
 
     anchors {
@@ -47,8 +47,8 @@ PanelWindow {
     // --- CONTENT ---
     Rectangle {
         id: content
-        width: parent.width
-        height: layout.implicitHeight + 32 
+        implicitWidth: parent.implicitWidth
+        implicitHeight: layout.implicitHeight + 32 
         
         radius: 12
         color: theme.bg // Main background
