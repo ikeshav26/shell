@@ -41,7 +41,7 @@ ColumnLayout {
                 text: "󰣇"
                 font.pixelSize: 24
                 font.family: "Symbols Nerd Font"
-                color: "#FFFFFF"
+                color: theme.bg
             }
         }
 

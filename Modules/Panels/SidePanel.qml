@@ -91,21 +91,23 @@ PanelWindow {
 
     required property var globalState
     required property var notifManager
+    required property Colors colors
     property alias theme: theme
 
     QtObject {
         id: theme
-        property color bg:           "#1e1e2e"
-        property color surface:      "#313244" // Surface0
-        property color border:       "#45475a" // Surface1
-        property color text:         "#cdd6f4" // Text
-        property color subtext:      "#a6adc8" // Subtext0
-        property color secondary:    "#bac2de" // Subtext1
-        property color muted:        "#585b70" // Surface2
-        property color urgent:       "#f38ba8" // Red
-        property color accent:       "#89b4fa" // Blue
-        property color accentActive: "#89b4fa"
-        property color tileActive:   "#313244"
+        property color bg:           root.colors.bg
+        property color surface:      root.colors.surface
+        property color border:       root.colors.border
+        property color text:         root.colors.text
+        property color subtext:      root.colors.subtext
+        property color secondary:    root.colors.secondary
+        property color muted:        root.colors.muted
+        property color urgent:       root.colors.urgent
+        property color accent:       root.colors.accent
+        property color accentActive: root.colors.accentActive
+        property color tileActive:   root.colors.tileActive
+        property color iconMuted:    root.colors.iconMuted
         
         property int borderRadius:   16
         property int contentMargins: 16

@@ -23,7 +23,7 @@ ColumnLayout {
     Repeater {
         model: [
             { label: "CPU", val: Math.round(CpuService.usage) + "%", progress: CpuService.usage / 100, color: theme.urgent, icon: "󰻠" },
-            { label: "RAM", val: Math.round(MemService.used / 1024 / 1024 / 1024 * 10) / 10 + " GB", progress: MemService.used / MemService.total, color: theme.purple, icon: "󰍛" },
+            { label: "RAM", val: Math.round(MemService.used / 1024 / 1024 / 1024 * 10) / 10 + " GB", progress: MemService.used / MemService.total, color: theme.accent, icon: "󰍛" },
             { label: "SSD", val: "24%", progress: 0.24, color: theme.green, icon: "󰋊" } // Mock Disk for now if DiskService isn't ready
         ]
         

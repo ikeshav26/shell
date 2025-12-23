@@ -50,7 +50,7 @@ ColumnLayout {
                 // This means it starts exactly at the edge of the circle.
                 height: 200 + (val * 150) 
                 
-                color: theme.purple
+                color: theme.accent
                 opacity: 0.8 // Increased opacity
                 radius: 3
                 
@@ -70,7 +70,7 @@ ColumnLayout {
             anchors.centerIn: parent
             radius: 100
             color: "#111"
-            border.color: theme.purple
+            border.color: theme.accent
             border.width: 2
             z: 2 // Above visualizer
             
@@ -107,7 +107,7 @@ ColumnLayout {
                         text: "󰝚"
                         font.family: "Symbols Nerd Font"
                         font.pixelSize: 32
-                        color: theme.purple
+                        color: theme.accent
                     }
                 }
             }
@@ -160,7 +160,7 @@ ColumnLayout {
         // Play/Pause
         Rectangle {
             width: 56; height: 56; radius: 28
-            color: theme.purple
+            color: theme.accent
             
             Text { 
                 anchors.centerIn: parent

@@ -50,6 +50,20 @@ Singleton {
         command: ["mkdir", "-p", Quickshell.env("HOME") + "/.cache/mannu"]
         running: false
     }
+
+    // Process to run matugen
+    Process {
+        id: matugenProcess
+        running: false
+        
+        onExited: (code, status) => {
+            if (code === 0) {
+                console.log("[WallpaperService] Matugen finished successfully");
+            } else {
+                console.error("[WallpaperService] Matugen failed with code:", code);
+            }
+        }
+    }
     
     // Load wallpapers from cache file
     function loadFromCache() {
@@ -71,6 +85,15 @@ Singleton {
             root.currentWallpapers = wallpaperCacheAdapter.wallpapers || {};
             root.defaultWallpaper = wallpaperCacheAdapter.defaultWallpaper || "";
             console.log("[WallpaperService] Loaded wallpapers from cache:", Object.keys(root.currentWallpapers).length, "screens");
+            
+            // Trigger color generation for the first available wallpaper
+            var screens = Object.keys(root.currentWallpapers);
+            if (screens.length > 0) {
+                var firstWallpaper = root.currentWallpapers[screens[0]];
+                console.log("[WallpaperService] Generating initial colors from:", firstWallpaper);
+                generateColors(firstWallpaper);
+            }
+            
             root.isInitialized = true;
         }
         
@@ -122,24 +145,34 @@ Singleton {
             return;
         }
         
-        // Check if wallpaper actually changed
-        var oldPath = currentWallpapers[screenName] || "";
-        var wallpaperChanged = (oldPath !== path);
-        
-        if (!wallpaperChanged) {
-            return;
-        }
-        
         // Update cache directly
+        var oldPath = currentWallpapers[screenName] || "";
         currentWallpapers[screenName] = path;
         
         // Save to cache file with debounce
         saveTimer.restart();
         
-        // Emit signal for this specific wallpaper change
-        root.wallpaperChanged(screenName, path);
+        // Emit signal if changed
+        if (oldPath !== path) {
+            root.wallpaperChanged(screenName, path);
+        }
         
         console.log("[WallpaperService] Set wallpaper for", screenName, "to", path);
+
+        // Generate colors from the path
+        generateColors(path);
+    }
+
+    // Generate colors using matugen
+    function generateColors(path) {
+        if (!path) return;
+        
+        var cachePath = Quickshell.env("HOME") + "/.cache/mannu/colors.json";
+        var logPath = Quickshell.env("HOME") + "/.cache/mannu/matugen.log";
+        var cmd = "/usr/bin/matugen image '" + path + "' -j hex > '" + cachePath + "' 2> '" + logPath + "'";
+        console.log("[WallpaperService] Generating colors command:", cmd);
+        matugenProcess.command = ["sh", "-c", cmd];
+        matugenProcess.running = true;
     }
     
     // Get list of wallpapers for a screen

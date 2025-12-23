@@ -28,7 +28,7 @@ Item {
                 text: "󰣇"
                 font.family: "Symbols Nerd Font"
                 font.pixelSize: 120
-                color: theme.purple // Fallback
+                color: theme.accent // Fallback
             }
         }
         

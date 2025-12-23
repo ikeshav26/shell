@@ -172,7 +172,7 @@ Rectangle {
                         width: parent.isActive ? 32 : 16
                         radius: height / 2
 
-                        color: (parent.isActive || parent.hasWindows) ? colors.purple : "transparent"
+                        color: (parent.isActive || parent.hasWindows) ? colors.accent : "transparent"
                         border.color: (!parent.isActive && !parent.hasWindows) ? colors.muted : "transparent"
                         border.width: (!parent.isActive && !parent.hasWindows) ? 2 : 0
 
@@ -327,7 +327,7 @@ Rectangle {
                 cursorShape: Qt.PointingHandCursor
                 hoverEnabled: true
                 
-                onEntered: parent.color = Qt.rgba(colors.purple.r, colors.purple.g, colors.purple.b, 0.2)
+                onEntered: parent.color = Qt.rgba(colors.accent.r, colors.accent.g, colors.accent.b, 0.2)
                 onExited: parent.color = "transparent"
                 
                 onClicked: {
@@ -341,7 +341,7 @@ Rectangle {
             Layout.preferredHeight: 26
             Layout.preferredWidth: clockText.implicitWidth + 24
             radius: height / 2
-            color: colors.purple
+            color: colors.accent
             Text {
                 id: clockText
                 anchors.centerIn: parent

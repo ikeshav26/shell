@@ -190,7 +190,7 @@ PanelWindow {
                             Layout.preferredWidth: 36
                             Layout.preferredHeight: 36
                             radius: 18
-                            color: root.currentTab === modelData.index ? appColors.purple : "transparent"
+                            color: root.currentTab === modelData.index ? appColors.accent : "transparent"
                             
                             Behavior on color { ColorAnimation { duration: 200 } }
                             

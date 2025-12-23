@@ -76,16 +76,8 @@ PanelWindow {
         onTriggered: root.showing = false
     }
     
-    QtObject {
-        id: theme
-        property color bg: "#1e1e2e" // Base
-        property color surface: "#313244" // Surface0
-        property color text: "#cdd6f4" // Text
-        property color subtext: "#a6adc8" // Subtext0
-        property color border: "#45475a" // Surface1
-        property color accent: "#89b4fa" // Blue
-        property color urgent: "#f38ba8" // Red
-    }
+    required property Colors colors
+    readonly property var theme: colors
     
 
     

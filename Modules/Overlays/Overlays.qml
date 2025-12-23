@@ -21,6 +21,7 @@ Item {
     NotificationToast {
         id: toast
         manager: notifManager
+        colors: root.context.colors
     }
 
 
@@ -28,6 +29,7 @@ Item {
         id: sidePanel
         globalState: root.context.appState
         notifManager: notifManager
+        colors: root.context.colors
         toastHovered: toast.hovered
     }
 
@@ -96,5 +98,9 @@ Item {
     IpcHandler {
         target: "cliphistService"
         function update() { clipboard.refresh(); }
+    }
+    IpcHandler {
+        target: "wallpaper"
+        function set(path) { WallpaperService.changeWallpaper(path, undefined); }
     }
 }
