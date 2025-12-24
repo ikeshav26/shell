@@ -50,7 +50,7 @@ PanelWindow {
 
     ListModel {
         id: buttonsModel
-        ListElement { name: "Lock"; icon: "󰌾"; command: "loginctl lock-session" }
+        ListElement { name: "Lock"; icon: "󰌾"; command: "quickshell ipc -c mannu call lock lock" }
         ListElement { name: "Suspend"; icon: "󰒲"; command: "systemctl suspend" }
         ListElement { name: "Shutdown"; icon: "󰐥"; command: "systemctl poweroff" }
         ListElement { name: "Reboot"; icon: "󰜉"; command: "systemctl reboot" }

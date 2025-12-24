@@ -8,7 +8,7 @@ Singleton {
     id: root
 
     property alias activePlayer: instance.activePlayer
-    property bool isPlaying: activePlayer ? activePlayer.playbackStatus === 0 : false
+    property bool isPlaying: activePlayer ? activePlayer.playbackState === MprisPlaybackState.Playing : false
     
     // Track Info
     property string title: activePlayer ? activePlayer.trackTitle : "No Media"
@@ -20,27 +20,39 @@ Singleton {
     QtObject {
         id: instance
         property var players: Mpris.players.values
-        property var activePlayer: players.length > 0 ? players[0] : null
+        property var activePlayer: null
     }
 
-    // Listen for new players
-    // Connections {
-    //    target: Mpris
-    //    function onPlayersChanged() { ... }
-    // }
-    
-    // Use Binding to auto-update. Mpris.players.values should trigger update.
-    Binding {
-        target: instance
-        property: "activePlayer"
-        value: Mpris.players.values.length > 0 ? Mpris.players.values[0] : null
-        when: !instance.activePlayer || !Mpris.players.values.includes(instance.activePlayer)
+    function updateActivePlayer() {
+        const players = Mpris.players.values
+        const playing = players.find(p => p.playbackState === MprisPlaybackState.Playing)
+        
+        if (playing) {
+            instance.activePlayer = playing
+        } else if (players.length > 0) {
+            // Keep current if it's still valid, otherwise switch to first
+            if (!instance.activePlayer || !players.includes(instance.activePlayer)) {
+                instance.activePlayer = players[0]
+            }
+        } else {
+            instance.activePlayer = null
+        }
+    }
+
+    // Monitor for changes
+    Timer {
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: updateActivePlayer()
     }
     
-    // Actually simpler: just bind it directly.
-    // property var activePlayer: Mpris.players.values.length > 0 ? Mpris.players.values[0] : null
-    // But we want manual override capability if needed (though not implemented yet).
-    // Let's stick to simple binding for now.
+    Connections {
+        target: Mpris.players
+        function onValuesChanged() { updateActivePlayer() }
+    }
+    
+    Component.onCompleted: updateActivePlayer()
 
     
     function playPause() {
