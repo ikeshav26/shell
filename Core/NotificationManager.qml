@@ -33,8 +33,20 @@ Item {
         notifications.remove(index);
     }
 
+    property ListModel activeNotifications: ListModel {}
+
     function removeById(notifId) {
         Logger.d("NotifMan", "Removing notification with ID:", notifId);
+        
+        // Remove from active list (popup)
+        for (var i = 0; i < activeNotifications.count; i++) {
+             if (activeNotifications.get(i).id === notifId) {
+                 activeNotifications.remove(i);
+                 break;
+             }
+        }
+
+        // Remove from history
         for (var i = 0; i < notifications.count; i++) {
             var item = notifications.get(i);
             if (item.id === notifId) {
@@ -54,6 +66,15 @@ Item {
     }
 
     function removeSilent(notifId) {
+        // Remove from active list
+        for (var i = 0; i < activeNotifications.count; i++) {
+             if (activeNotifications.get(i).id === notifId) {
+                 activeNotifications.remove(i);
+                 break;
+             }
+        }
+        
+        // Remove from history
         for (var i = 0; i < notifications.count; i++) {
             if (notifications.get(i).id === notifId) {
                 notifications.remove(i);
@@ -63,6 +84,14 @@ Item {
     }
 
     function removeByRef(notificationRef) {
+        // Remove from active list
+        for (var i = 0; i < activeNotifications.count; i++) {
+             if (activeNotifications.get(i).ref === notificationRef) {
+                 activeNotifications.remove(i);
+                 break;
+             }
+        }
+
         for (var i = 0; i < notifications.count; i++) {
             if (notifications.get(i).ref === notificationRef) {
                 notifications.remove(i);
@@ -80,7 +109,7 @@ Item {
         onNotification: (notification) => {
             notification.tracked = true;
             var uniqueId = root.notificationCounter++;
-            root.notifications.insert(0, {
+            var entry = {
                 "id": uniqueId,
                 "ref": notification,
                 "appName": notification.appName,
@@ -89,36 +118,51 @@ Item {
                 "appIcon": notification.appIcon,
                 "image": notification.image,
                 "urgency": notification.urgency,
-                "time": Qt.formatTime(new Date(), "hh:mm")
-            });
-            Logger.d("NotifMan", "Notification added:", notification.summary, "ID:", uniqueId, "Total count:", root.notifications.count);
+                "time": Qt.formatTime(new Date(), "hh:mm"),
+                "expireTime": Date.now() + 5000 // 5 seconds display time
+            };
             
-            // Force update popup even if visible
-            root.currentPopup = notification;
+            // Add to history
+            root.notifications.insert(0, entry);
+            
+            // Add to active notifications (stack)
+            root.activeNotifications.insert(0, entry);
+            
+            Logger.d("NotifMan", "Notification added:", notification.summary, "ID:", uniqueId, "Stack count:", root.activeNotifications.count);
+            
             root.popupVisible = true;
-            root.popupVisibleChanged(); // Manually signal change if it was already true? No, bind to currentPopup in Toast.
-            
-            // Auto close timer
-            popupTimer.restart();
+            popupTimer.restart(); // Ensure timer is running
             
             notification.closed.connect(() => {
                 Logger.d("NotifMan", "Notification closed signal received for ID:", uniqueId);
                 root.removeSilent(uniqueId);
-                if (root.currentPopup === notification)
-                    root.popupVisible = false;
-
             });
         }
     }
 
     Timer {
         id: popupTimer
-
-        interval: 5000
-        onTriggered: root.popupVisible = false
+        interval: 1000
+        repeat: true
+        running: root.activeNotifications.count > 0
+        onTriggered: {
+            var now = Date.now();
+            var kept = false;
+            // Iterate backwards to safe remove
+            for (var i = root.activeNotifications.count - 1; i >= 0; i--) {
+                var item = root.activeNotifications.get(i);
+                if (now >= item.expireTime) {
+                    root.activeNotifications.remove(i);
+                } else {
+                    kept = true;
+                }
+            }
+            if (!kept) root.popupVisible = false;
+        }
     }
 
     notifications: ListModel {
     }
 
 }
+
