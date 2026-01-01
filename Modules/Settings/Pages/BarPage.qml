@@ -41,13 +41,11 @@ ColumnLayout {
         ComboBox {
             id: positionCombo
             Layout.preferredWidth: 150
-            model: ["Top", "Bottom", "Left", "Right"]
+            model: ["Top", "Bottom"]
             currentIndex: {
                 var pos = Config.barPosition.toLowerCase();
                 if (pos === "top") return 0;
                 if (pos === "bottom") return 1;
-                if (pos === "left") return 2;
-                if (pos === "right") return 3;
                 return 0;
             }
             
@@ -127,7 +125,7 @@ ColumnLayout {
             }
             
             onActivated: {
-                var positions = ["top", "bottom", "left", "right"];
+                var positions = ["top", "bottom"];
                 Config.barPosition = positions[currentIndex];
             }
         }
