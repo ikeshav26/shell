@@ -4,7 +4,6 @@ pragma Singleton
 QtObject {
     id: root
 
-    // Helper function to get battery icon based on percentage and charging state
     function getIcon(percent, charging, isReady) {
         if (!isReady) return "󰂎"
         if (charging) return "󰂄"
@@ -22,16 +21,16 @@ QtObject {
         return "󰁺"
     }
 
-    // Helper function to get state color
+
     function getStateColor(percent, charging, full) {
-        if (charging) return "#a6e3a1"  // Green
-        if (full) return "#89b4fa"       // Blue
-        if (percent <= 20) return "#f38ba8"  // Red
-        if (percent <= 40) return "#fab387"  // Orange
-        return "#cdd6f4"                 // Normal
+        if (charging) return "#a6e3a1"
+        if (full) return "#89b4fa"      
+        if (percent <= 20) return "#f38ba8"  
+        if (percent <= 40) return "#fab387"  
+        return "#cdd6f4"
     }
 
-    // Helper function to format time remaining
+    
     function formatTime(seconds) {
         if (seconds <= 0) return ""
         

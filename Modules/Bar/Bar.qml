@@ -10,7 +10,6 @@ import qs.Services
 Rectangle {
     id: barRoot
 
-    // Required properties from the main configuration
     required property Colors colors
     required property string fontFamily
     required property int fontSize
@@ -24,12 +23,12 @@ Rectangle {
     required property string time
     property bool floating: true
     
-    // Services
+
     property var volumeService
     property var networkService
     property var globalState
     
-    // Battery via UPower
+
     property var battery: UPower.displayDevice
     property real batteryPercent: battery && battery.percentage !== undefined ? battery.percentage * 100 : 0
     property bool batteryCharging: battery && battery.state === UPowerDeviceState.Charging
@@ -516,7 +515,6 @@ Rectangle {
         }
     }
 
-    // --- Components ---
 
     component VerticalDivider: Rectangle {
         Layout.preferredWidth: 1
