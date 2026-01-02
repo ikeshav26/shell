@@ -64,19 +64,29 @@ PanelWindow {
         }
 
         remove: Transition {
-            NumberAnimation {
-                property: "opacity"
-                to: 0
-                duration: 200
-            }
+            ParallelAnimation {
+                NumberAnimation {
+                    property: "opacity"
+                    to: 0
+                    duration: 300
+                    easing.type: Easing.OutQuad
+                }
+                
+                NumberAnimation {
+                    property: "scale"
+                    to: 0.8
+                    duration: 300
+                    easing.type: Easing.OutQuad
+                }
 
-            NumberAnimation {
-                property: "x"
-                to: 350
-                duration: 200
-                easing.type: Easing.InQuad
+                NumberAnimation {
+                    property: "x"
+                    to: 350
+                    duration: 300
+                    easing.type: Easing.InBack
+                    easing.overshoot: 1.2
+                }
             }
-
         }
 
         displaced: Transition {
@@ -93,7 +103,7 @@ PanelWindow {
 
             width: 320
             height: visible ? implicitHeight : 0 // Collapse hidden items
-            implicitHeight: mainLayout.implicitHeight + 24
+            implicitHeight: mainLayout.implicitHeight + 24 + 16 // Add padding for badge overhang
             // Only show top 2
             visible: index < 2
             opacity: visible ? 1 : 0
@@ -104,7 +114,11 @@ PanelWindow {
             Rectangle {
                 id: bgRect
 
-                anchors.fill: parent
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: mainLayout.implicitHeight + 24
+                
                 radius: 20
                 color: Qt.rgba(theme.bg.r, theme.bg.g, theme.bg.b, 0.95)
                 border.width: 1
