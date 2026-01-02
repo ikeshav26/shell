@@ -12,6 +12,7 @@ QtObject {
     property bool settingsOpen: false
 
     signal requestSidePanelMenu(string menu)
+    signal requestInfoPanelTab(int tabIndex)
 
     function toggleLauncher() {
         if (launcherOpen) {

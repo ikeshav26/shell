@@ -65,6 +65,15 @@ PanelWindow {
         id: systemInfo
     }
 
+    Connections {
+        target: globalState
+        function onRequestInfoPanelTab(tabIndex) {
+            root.currentTab = tabIndex
+            root.isOpen = true
+            root.forcedOpen = true
+        }
+    }
+
     Region {
         id: fullMask
 

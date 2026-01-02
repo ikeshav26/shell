@@ -8,6 +8,7 @@ import Quickshell.Services.SystemTray
 import qs.Core
 import qs.Services
 import qs.Widgets
+import Qt5Compat.GraphicalEffects
 
 Rectangle {
     id: barRoot
@@ -170,105 +171,126 @@ Rectangle {
 
         VerticalDivider { }
 
-        // 4. Enhanced Media Pill
+        // 4. Unique Music Widget (Spinning Vinyl)
         Rectangle {
-            id: mediaPill
+            id: mediaWidget
 
-            Layout.preferredHeight: 26
-            Layout.preferredWidth: Math.min(mediaRow.implicitWidth + 24, 300)
-            radius: height / 2
-            color: Qt.rgba(colors.accent.r, colors.accent.g, colors.accent.b, 0.15)
-            border.color: Qt.rgba(colors.accent.r, colors.accent.g, colors.accent.b, 0.5)
-            border.width: 1
+            property bool showInfo: false
+            property bool hasMedia: MprisService.title !== ""
+            property real componentsOpacity: showInfo ? 1 : 0
+            
+            Layout.preferredHeight: 28 // Slightly taller for better look
+            Layout.preferredWidth: showInfo ? Math.min(mediaContent.implicitWidth + 36, 300) : 28
+            radius: 14 // Fully rounded
+            
+            color: showInfo ? Qt.rgba(0, 0, 0, 0.4) : "transparent"
+            border.color: colors.accent
+            border.width: (showInfo || MprisService.isPlaying) ? 1 : 0
+            clip: true
 
-            RowLayout {
-                id: mediaRow
+            Behavior on Layout.preferredWidth { NumberAnimation { duration: 350; easing.type: Easing.OutBack } }
+            Behavior on color { ColorAnimation { duration: 200 } }
+            Behavior on border.width { NumberAnimation { duration: 200 } }
 
-                anchors.centerIn: parent
-                spacing: 6
-                width: parent.width - 12
-
-                Text {
-                    text: "󰒮" // Nerd Font Previous
-                    font.family: "Symbols Nerd Font"
-                    font.pixelSize: 14
-                    color: prevMouse.containsMouse ? colors.accent : colors.fg
-                    opacity: 0.8
-                    Layout.leftMargin: 4
-
-                    MouseArea {
-                        id: prevMouse
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        hoverEnabled: true
-                        onClicked: MprisService.previous()
-                    }
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                }
-
-                Rectangle {
-                    Layout.preferredWidth: 20
-                    Layout.preferredHeight: 20
-                    radius: 10
-                    color: playMouse.containsMouse ? colors.accentActive : colors.accent
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: MprisService.isPlaying ? "󰏤" : "󰐊"
-                        font.family: "Symbols Nerd Font"
-                        font.pixelSize: 14
-                        color: colors.bg
-                        anchors.horizontalCenterOffset: MprisService.isPlaying ? 0 : 1
-                    }
-
-                    MouseArea {
-                        id: playMouse
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        hoverEnabled: true
-                        onClicked: MprisService.playPause()
-                    }
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                }
-
-                Text {
-                    text: "󰒭" // Nerd Font Next
-                    font.family: "Symbols Nerd Font"
-                    font.pixelSize: 14
-                    color: nextMouse.containsMouse ? colors.accent : colors.fg
-                    opacity: 0.8
-
-                    MouseArea {
-                        id: nextMouse
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        hoverEnabled: true
-                        onClicked: MprisService.next()
-                    }
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                }
-
-                Text {
-                    text: MprisService.title !== "" ? MprisService.title : "No Media"
-                    font.family: fontFamily
-                    font.pixelSize: fontSize - 2
-                    font.bold: true
-                    color: colors.fg
-                    opacity: 0.9
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
-                    Layout.leftMargin: 4
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: MprisService.playPause()
+            // Interaction Handler
+            MouseArea {
+                id: mediaMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                cursorShape: Qt.PointingHandCursor
+                
+                onClicked: (mouse) => {
+                    if (mouse.button === Qt.LeftButton) {
+                        globalState.requestInfoPanelTab(1)
+                    } else if (mouse.button === Qt.RightButton) {
+                        parent.showInfo = !parent.showInfo
                     }
                 }
             }
 
-            Behavior on Layout.preferredWidth {
-                NumberAnimation { duration: 200 }
+            // 1. Spinning Vinyl (Art)
+            Item {
+                id: vinylContainer
+                
+                width: 24
+                height: 24
+                anchors.left: parent.left
+                anchors.leftMargin: 2
+                anchors.verticalCenter: parent.verticalCenter
+                
+                // Rotation Logic
+                RotationAnimation on rotation {
+                    from: 0; to: 360
+                    duration: 4000
+                    loops: Animation.Infinite
+                    running: MprisService.isPlaying
+                }
+
+                // Art Ring
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 12
+                    color: "#1a1a1a"
+                    border.color: colors.accent
+                    border.width: 1
+                    
+                    Image {
+                        anchors.fill: parent
+                        anchors.margins: 2
+                        source: MprisService.artUrl !== "" ? MprisService.artUrl : "../../Assets/icon.png" // Fallback
+                        fillMode: Image.PreserveAspectCrop
+                        layer.enabled: true
+                        layer.effect: OpacityMask {
+                            maskSource: Rectangle {
+                                width: 20; height: 20; radius: 10
+                            }
+                        }
+                    }
+                    
+                    // Center hole
+                    Rectangle {
+                        width: 6; height: 6
+                        radius: 3
+                        color: "#2a2a2a"
+                        anchors.centerIn: parent
+                        border.color: "#000000"
+                        border.width: 1
+                    }
+                }
+            }
+
+            // 2. Expanded Content
+            RowLayout {
+                id: mediaContent
+                
+                anchors.left: vinylContainer.right
+                anchors.leftMargin: 12
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 12
+                
+                opacity: componentsOpacity
+                visible: opacity > 0
+                Behavior on opacity { NumberAnimation { duration: 200 } }
+
+                // Info (Single Line)
+                Text {
+                    text: {
+                        let t = MprisService.title !== "" ? MprisService.title : "No Media";
+                        let a = MprisService.artist;
+                        if (a !== "" && a !== "Unknown Artist") return t + " • " + a;
+                        return t;
+                    }
+                    font.family: fontFamily
+                    font.pixelSize: fontSize - 1
+                    font.bold: true
+                    color: colors.fg
+                    elide: Text.ElideRight
+                    Layout.fillWidth: true
+                    Layout.maximumWidth: 160
+                    Layout.alignment: Qt.AlignVCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
             }
         }
 

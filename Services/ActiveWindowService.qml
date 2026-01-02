@@ -3,36 +3,19 @@ import Quickshell.Hyprland
 import Quickshell.Io
 
 Item {
-    property string title: "Window"
+    // Native binding using Quickshell's Hyprland module
+    // This is more efficient than polling 'hyprctl'
+    property string title: {
+        const active = Hyprland.activeWindow;
+        const focusedWs = Hyprland.focusedWorkspace;
 
-    Process {
-        id: windowProc
-
-        command: ["sh", "-c", "hyprctl activewindow -j | jq -r '.title // empty'"]
-
-        stdout: SplitParser {
-            onRead: (data) => {
-                if (data && data.trim())
-                    title = data.trim();
-
-            }
+        if (!active || !focusedWs) return "";
+        
+        // Only show title if the active window is on the currently focused workspace
+        if (active.workspace.id === focusedWs.id) {
+            return active.title;
         }
-
+        
+        return "";
     }
-
-    Connections {
-        function onRawEvent(event) {
-            windowProc.running = true;
-        }
-
-        target: Hyprland
-    }
-
-    Timer {
-        interval: 200
-        running: true
-        repeat: true
-        onTriggered: windowProc.running = true
-    }
-
 }
