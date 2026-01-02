@@ -264,46 +264,109 @@ Item {
                     font.family: "JetBrainsMono Nerd Font"
                 }
 
-                Slider {
-                    id: progressSlider
-
+                // Custom Progress Bar with MouseArea
+                Item {
+                    id: progressContainer
+                    
+                    property bool seeking: false
+                    property real seekValue: 0
+                    
                     Layout.fillWidth: true
-                    from: 0
-                    to: MprisService.length > 0 ? MprisService.length : 1
-                    value: MprisService.position
-                    // Seek logic
-                    onMoved: {
-                        MprisService.setPosition(value);
+                    Layout.preferredHeight: 24
+                    
+                    function seekTo(mouseX) {
+                        var pos = Math.max(0, Math.min(mouseX / width, 1));
+                        seekValue = pos * MprisService.length;
                     }
-
-                    // Custom handle
-                    handle: Rectangle {
-                        x: progressSlider.leftPadding + progressSlider.visualPosition * (progressSlider.availableWidth - width)
-                        y: progressSlider.topPadding + progressSlider.availableHeight / 2 - height / 2
-                        width: 12
-                        height: 24 // Vertical pill shape
-                        radius: 6
-                        color: theme.accent
-                    }
-
-                    // Custom background
-                    background: Rectangle {
-                        x: progressSlider.leftPadding
-                        y: progressSlider.topPadding + parent.availableHeight / 2 - height / 2
-                        width: progressSlider.availableWidth
+                    
+                    // Track background
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: parent.width
                         height: 6
                         radius: 3
                         color: "#40ffffff"
-
+                        
+                        // Progress fill
                         Rectangle {
-                            width: progressSlider.visualPosition * parent.width
+                            width: {
+                                var len = MprisService.length > 0 ? MprisService.length : 1;
+                                var pos = (progressContainer.seeking || progressContainer.seekingCooldown) ? progressContainer.seekValue : MprisService.position;
+                                return (pos / len) * parent.width;
+                            }
                             height: parent.height
-                            color: theme.accent
                             radius: 3
+                            color: theme.accent
                         }
+                    }
+                    
+                    // Draggable handle
+                    Rectangle {
+                        id: progressHandle
+                        
+                        x: {
+                            var len = MprisService.length > 0 ? MprisService.length : 1;
+                            var pos = (progressContainer.seeking || progressContainer.seekingCooldown) ? progressContainer.seekValue : MprisService.position;
+                            return (pos / len) * (parent.width - width);
+                        }
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 12
+                        height: 24
+                        radius: 6
+                        color: theme.accent
+                    }
+                    
+                    property bool seekingCooldown: false
 
+                    // Timer to keep showing the sought position until the player catches up
+                    Timer {
+                        id: seekCooldownTimer
+                        interval: 1000 // 1 second grace period for player to update
+                        repeat: false
+                        onTriggered: {
+                            progressContainer.seekingCooldown = false;
+                        }
                     }
 
+                    // Keep seekValue correctly synced when not seeking AND not in cooldown
+                    Binding {
+                        target: progressContainer
+                        property: "seekValue"
+                        value: MprisService.position
+                        when: !progressContainer.seeking && !progressContainer.seekingCooldown
+                    }
+
+                    // Mouse interaction
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        
+                        onPressed: (mouse) => {
+                            // Cancel any active cooldown
+                            seekCooldownTimer.stop();
+                            progressContainer.seekingCooldown = false;
+                            
+                            // Update UI immediately
+                            progressContainer.seekTo(mouse.x);
+                            progressContainer.seeking = true;
+                        }
+                        
+                        onPositionChanged: (mouse) => {
+                            if (progressContainer.seeking) {
+                                progressContainer.seekTo(mouse.x);
+                            }
+                        }
+                        
+                        onReleased: {
+                            if (progressContainer.seeking) {
+                                MprisService.setPosition(progressContainer.seekValue);
+                                // Enter cooldown mode to prevent jumping back
+                                progressContainer.seeking = false;
+                                progressContainer.seekingCooldown = true;
+                                seekCooldownTimer.restart();
+                            }
+                        }
+                    }
                 }
 
                 Text {
