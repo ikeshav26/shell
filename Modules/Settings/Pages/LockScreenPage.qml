@@ -62,4 +62,18 @@ ColumnLayout {
         }
     }
 
+    ToggleButton {
+        Layout.fillWidth: true
+        label: "Music Mode"
+        sublabel: "Show simplified music player on lock screen"
+        icon: "󰎈"
+        active: Config.lockScreenMusicMode
+        colors: context.colors
+        onActiveChanged: {
+            if (active !== Config.lockScreenMusicMode)
+                Config.lockScreenMusicMode = active;
+
+        }
+    }
+
 }

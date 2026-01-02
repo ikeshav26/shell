@@ -18,6 +18,7 @@ Singleton {
     property bool disableLockBlur: false
     property bool disableLockAnimation: false
     property bool lockScreenCustomBackground: false
+    property bool lockScreenMusicMode: false
     property bool lazyLoadLockScreen: true
     property bool shellLoaded: false
     property bool debug: false
@@ -38,6 +39,7 @@ Singleton {
         configAdapter.disableLockBlur = root.disableLockBlur;
         configAdapter.disableLockAnimation = root.disableLockAnimation;
         configAdapter.lockScreenCustomBackground = root.lockScreenCustomBackground;
+        configAdapter.lockScreenMusicMode = root.lockScreenMusicMode;
         configAdapter.lazyLoadLockScreen = root.lazyLoadLockScreen;
         configAdapter.debug = root.debug;
         configFile.writeAdapter();
@@ -62,6 +64,7 @@ Singleton {
     onDisableLockBlurChanged: if (!_loading) saveTimer.restart()
     onDisableLockAnimationChanged: if (!_loading) saveTimer.restart()
     onLockScreenCustomBackgroundChanged: if (!_loading) saveTimer.restart()
+    onLockScreenMusicModeChanged: if (!_loading) saveTimer.restart()
     onLazyLoadLockScreenChanged: if (!_loading) saveTimer.restart()
 
     FileView {
@@ -89,6 +92,7 @@ Singleton {
             property bool disableLockBlur
             property bool disableLockAnimation
             property bool lockScreenCustomBackground
+            property bool lockScreenMusicMode
             property bool lazyLoadLockScreen
             property bool debug
         }
@@ -106,6 +110,7 @@ Singleton {
                 if (configAdapter.disableLockBlur !== undefined) root.disableLockBlur = configAdapter.disableLockBlur;
                 if (configAdapter.disableLockAnimation !== undefined) root.disableLockAnimation = configAdapter.disableLockAnimation;
                 if (configAdapter.lockScreenCustomBackground !== undefined) root.lockScreenCustomBackground = configAdapter.lockScreenCustomBackground;
+                if (configAdapter.lockScreenMusicMode !== undefined) root.lockScreenMusicMode = configAdapter.lockScreenMusicMode;
                 if (configAdapter.lazyLoadLockScreen !== undefined) root.lazyLoadLockScreen = configAdapter.lazyLoadLockScreen;
                 if (configAdapter.debug !== undefined) root.debug = configAdapter.debug;
 

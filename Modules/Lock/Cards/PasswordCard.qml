@@ -140,12 +140,14 @@ BentoCard {
                     function onFailure() {
                         shakeAnim.start();
                         inputField.color = root.colors.urgent;
+                        errorLabel.visible = true;
                         failTimer.start();
                     }
 
                     function onError() {
                         shakeAnim.start();
                         inputField.color = root.colors.urgent;
+                        errorLabel.visible = true;
                         failTimer.start();
                     }
 
@@ -155,10 +157,25 @@ BentoCard {
                 Timer {
                     id: failTimer
 
-                    interval: 1000
-                    onTriggered: inputField.color = root.colors.fg
+                    interval: 2000
+                    onTriggered: {
+                        inputField.color = root.colors.fg
+                        errorLabel.visible = false
+                    }
                 }
             }
+        }
+        
+        Text {
+            id: errorLabel
+            text: "Incorrect Password"
+            color: root.colors.urgent
+            font.pixelSize: 12
+            font.bold: true
+            Layout.alignment: Qt.AlignHCenter
+            visible: false
+            opacity: visible ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 200 } }
         }
     }
 }
