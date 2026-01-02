@@ -26,28 +26,34 @@ Item {
     Item {
         anchors.fill: parent
         
-        ScreencopyView {
+        Loader {
             anchors.fill: parent
-            captureSource: Quickshell.screens[0] // Assuming primary screen or passed screen
-            visible: !Config.lockScreenCustomBackground
-            enabled: visible
-            layer.enabled: true
-
-            layer.effect: FastBlur {
-                radius: Config.disableLockBlur ? 0 : 48
+            sourceComponent: Config.lockScreenCustomBackground ? wallpaperComponent : screencopyComponent
+        }
+        
+        Component {
+            id: screencopyComponent
+            ScreencopyView {
+                anchors.fill: parent
+                captureSource: Quickshell.screens[0] 
+                layer.enabled: true
+                layer.effect: FastBlur {
+                    radius: Config.disableLockBlur ? 0 : 48
+                }
             }
         }
 
-        Image {
-            anchors.fill: parent
-            source: Config.lockScreenCustomBackground ? ("file://" + WallpaperService.getWallpaper(Quickshell.screens[0].name)) : ""
-            fillMode: Image.PreserveAspectCrop
-            visible: Config.lockScreenCustomBackground
-            layer.enabled: visible
-
-            layer.effect: FastBlur {
-                radius: Config.disableLockBlur ? 0 : 64
-                transparentBorder: false
+        Component {
+            id: wallpaperComponent
+            Image {
+                anchors.fill: parent
+                source: "file://" + WallpaperService.getWallpaper(Quickshell.screens[0].name)
+                fillMode: Image.PreserveAspectCrop
+                layer.enabled: true
+                layer.effect: FastBlur {
+                    radius: Config.disableLockBlur ? 0 : 64
+                    transparentBorder: false
+                }
             }
         }
         
