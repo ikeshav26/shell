@@ -134,8 +134,6 @@ PanelWindow {
         
         radius: 16
         color: Qt.rgba(appColors.bg.r, appColors.bg.g, appColors.bg.b, 0.95)
-        border.width: 1
-        border.color: appColors.border
         clip: true
         // Block clicks from propagating to background MouseArea
         MouseArea {
@@ -289,8 +287,6 @@ PanelWindow {
 
         radius: 16
         color: Qt.rgba(appColors.bg.r, appColors.bg.g, appColors.bg.b, 0.95)
-        border.width: 1
-        border.color: appColors.border
         clip: true
         // Block clicks from propagating to background MouseArea
         MouseArea {
