@@ -4,8 +4,8 @@ import qs.Core
 
 Item {
     // Expose total and used (bytes) plus usage percent
-    property int total: 0
-    property int used: 0
+    property real total: 0
+    property real used: 0
     property int usage: 0
     // Temporary storage for output
     property string outputBuffer: ""
@@ -26,13 +26,14 @@ Item {
         // Capture stdout as it comes in
         stdout: SplitParser {
             onRead: (data) => {
+                // Logger.d("MemService", "No data received");
+                // Logger.d("MemService", "Empty output after trim");
+
                 if (!data)
-                    // Logger.d("MemService", "No data received");
                     return ;
 
                 var output = data.trim();
                 if (output === "")
-                    // Logger.d("MemService", "Empty output after trim");
                     return ;
 
                 // Split by whitespace
@@ -57,7 +58,7 @@ Item {
     }
 
     Timer {
-        interval: 1000
+        interval: 1500
         running: true
         repeat: true
         triggeredOnStart: true

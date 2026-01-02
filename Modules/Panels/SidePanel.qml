@@ -216,8 +216,6 @@ PanelWindow {
         x: root.getX(root.controlOpen || menuLoader.active || root.forcedOpen)
         radius: 16
         color: Qt.rgba(theme.bg.r, theme.bg.g, theme.bg.b, 0.95)
-        border.width: 1
-        border.color: theme.border
         clip: true // Ensure content doesn't bleed during animation
         layer.enabled: root.controlOpen || menuLoader.active || root.forcedOpen
 
@@ -343,8 +341,6 @@ PanelWindow {
         x: root.getX(root.notifOpen || root.forcedOpen)
         radius: 16
         color: Qt.rgba(theme.bg.r, theme.bg.g, theme.bg.b, 0.95)
-        border.width: 1
-        border.color: theme.border
         layer.enabled: root.notifOpen || root.forcedOpen
 
         Views.NotificationBoxContent {

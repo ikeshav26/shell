@@ -2,44 +2,37 @@ import QtQuick
 import Quickshell
 pragma Singleton
 
-// Root must be Item (not QtObject) to support the Timer
 Item {
-    // 30 Minutes
-    // --- Logic ---
-
     id: root
 
-    // --- Live Properties ---
     property string temperature: "--"
     property string conditionText: "Unknown"
     property string city: "Locating..."
     property string icon: ""
     property bool isDay: true
-    // Detailed Stats
     property string humidity: "--%"
     property string wind: "-- km/h"
     property string pressure: "-- hPa"
     property string uvIndex: "--"
-    // Weekly Forecast Model (Array of objects)
-    // Structure: { day: "Mon", icon: "...", max: "20°", min: "10°", condition: "Sunny" }
+    property string sunrise: "--:--"
+    property string sunset: "--:--"
+    property var hourlyForecast: []
     property var forecastModel: []
-    // --- Configuration ---
-    property int refreshInterval: 30 * 60 * 1000
-    // --- Weather Codes Map ---
-    property var _weatherCodes: ({
+    property int refreshInterval: 1.8e+06
+    property var _weatherCodes: {
         "0": {
             "day": "",
             "night": "",
             "desc": "Clear sky"
         },
         "1": {
-            "day": "",
-            "night": "",
+            "day": "",
+            "night": "",
             "desc": "Mainly clear"
         },
         "2": {
-            "day": "",
-            "night": "",
+            "day": "",
+            "night": "",
             "desc": "Partly cloudy"
         },
         "3": {
@@ -48,28 +41,28 @@ Item {
             "desc": "Overcast"
         },
         "45": {
-            "day": "",
-            "night": "",
+            "day": "",
+            "night": "",
             "desc": "Fog"
         },
         "48": {
-            "day": "",
-            "night": "",
-            "desc": "Rime fog"
+            "day": "",
+            "night": "",
+            "desc": "Depositing rime fog"
         },
         "51": {
-            "day": "",
-            "night": "",
+            "day": "",
+            "night": "",
             "desc": "Light drizzle"
         },
         "53": {
-            "day": "",
-            "night": "",
-            "desc": "Mod. drizzle"
+            "day": "",
+            "night": "",
+            "desc": "Moderate drizzle"
         },
         "55": {
-            "day": "",
-            "night": "",
+            "day": "",
+            "night": "",
             "desc": "Dense drizzle"
         },
         "61": {
@@ -80,7 +73,7 @@ Item {
         "63": {
             "day": "",
             "night": "",
-            "desc": "Mod. rain"
+            "desc": "Moderate rain"
         },
         "65": {
             "day": "",
@@ -95,48 +88,71 @@ Item {
         "73": {
             "day": "",
             "night": "",
-            "desc": "Mod. snow"
+            "desc": "Moderate snow"
         },
         "75": {
             "day": "",
             "night": "",
             "desc": "Heavy snow"
         },
+        "77": {
+            "day": "",
+            "night": "",
+            "desc": "Snow grains"
+        },
         "80": {
             "day": "",
             "night": "",
-            "desc": "Rain showers"
+            "desc": "Slight rain showers"
         },
         "81": {
             "day": "",
             "night": "",
-            "desc": "Mod. showers"
+            "desc": "Moderate rain showers"
         },
         "82": {
             "day": "",
             "night": "",
-            "desc": "Violent showers"
+            "desc": "Violent rain showers"
+        },
+        "85": {
+            "day": "",
+            "night": "",
+            "desc": "Slight snow showers"
+        },
+        "86": {
+            "day": "",
+            "night": "",
+            "desc": "Heavy snow showers"
         },
         "95": {
-            "day": "ﱈ",
-            "night": "ﱈ",
+            "day": "",
+            "night": "",
             "desc": "Thunderstorm"
         },
         "96": {
-            "day": "ﱈ",
-            "night": "ﱈ",
-            "desc": "Thunderstorm"
+            "day": "",
+            "night": "",
+            "desc": "Thunderstorm with hail"
         },
         "99": {
-            "day": "ﱈ",
-            "night": "ﱈ",
-            "desc": "Thunderstorm"
+            "day": "",
+            "night": "",
+            "desc": "Thunderstorm with heavy hail"
         }
-    })
+    }
+
+    function formatTime(isoString) {
+        if (!isoString)
+            return "--:--";
+
+        var date = new Date(isoString);
+        return date.toLocaleTimeString(Qt.locale(), Locale.ShortFormat).replace(/:\d\d /, " ");
+    }
 
     function getDayName(dateString) {
         var date = new Date(dateString);
-        return date.toLocaleDateString(Qt.locale(), "ddd"); // Returns "Mon", "Tue", etc.
+        return date.toLocaleDateString(Qt.locale(), "ddd");
     }
 
     function fetchLocation() {
@@ -146,14 +162,13 @@ Item {
                 if (xhr.status === 200) {
                     try {
                         var response = JSON.parse(xhr.responseText);
-                        root.city = response.city;
+                        if (response.city)
+                            root.city = response.city;
+
                         fetchWeather(response.lat, response.lon);
                     } catch (e) {
-                        Logger.w("WeatherService", "Location JSON parse error");
+                        console.warn("[Weather] Location JSON parse error", e);
                     }
-                } else {
-                    Logger.w("WeatherService", "Location fetch failed: " + xhr.status);
-                    root.city = "Unknown";
                 }
             }
         };
@@ -162,18 +177,13 @@ Item {
     }
 
     function fetchWeather(lat, lon) {
-        // Added &daily parameters for forecast and UV
-        // Added &timezone=auto to ensure daily breakdown matches local time
-        var url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&current=temperature_2m,is_day,weather_code,relative_humidity_2m,wind_speed_10m,surface_pressure" + "&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max" + "&timezone=auto&temperature_unit=celsius&wind_speed_unit=kmh";
+        var url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&current=temperature_2m,is_day,weather_code,relative_humidity_2m,wind_speed_10m,surface_pressure" + "&hourly=temperature_2m" + "&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,sunrise,sunset" + "&timezone=auto&temperature_unit=celsius&wind_speed_unit=kmh&forecast_days=7";
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 if (xhr.status === 200) {
                     try {
-                        // Always use day icon for forecast
-
                         var response = JSON.parse(xhr.responseText);
-                        // 1. Current Weather
                         var current = response.current;
                         root.temperature = Math.round(current.temperature_2m) + "°";
                         root.isDay = current.is_day === 1;
@@ -188,14 +198,25 @@ Item {
                         };
                         root.icon = root.isDay ? info.day : info.night;
                         root.conditionText = info.desc;
-                        // 2. Daily Data (UV & Forecast)
                         var daily = response.daily;
-                        if (daily && daily.uv_index_max && daily.uv_index_max.length > 0)
-                            root.uvIndex = daily.uv_index_max[0].toString();
+                        if (daily) {
+                            if (daily.uv_index_max && daily.uv_index_max.length > 0)
+                                root.uvIndex = daily.uv_index_max[0].toString();
 
-                        // 3. Process Forecast (Next 5 days)
+                            if (daily.sunrise && daily.sunrise.length > 0)
+                                root.sunrise = formatTime(daily.sunrise[0]);
+
+                            if (daily.sunset && daily.sunset.length > 0)
+                                root.sunset = formatTime(daily.sunset[0]);
+
+                        }
+                        var hourly = response.hourly;
+                        if (hourly && hourly.temperature_2m) {
+                            var currentHourIndex = new Date().getHours();
+                            var slice = hourly.temperature_2m.slice(currentHourIndex, currentHourIndex + 24);
+                            root.hourlyForecast = slice;
+                        }
                         var newForecast = [];
-                        // Start from index 1 (Tomorrow), loop for 5 days
                         for (var i = 1; i < 6; i++) {
                             if (!daily.time[i])
                                 break;
@@ -224,7 +245,6 @@ Item {
         xhr.send();
     }
 
-    // Timer works because root is Item
     Timer {
         interval: root.refreshInterval
         running: true
