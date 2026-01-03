@@ -8,7 +8,7 @@ PanelWindow {
 
     property var context
 
-    visible: true 
+    visible: !context.activeWindow.isFullscreen 
 
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore

@@ -4,6 +4,7 @@ import Quickshell.Io
 
 Item {
     property string title: ""
+    property bool isFullscreen: false
 
     Process {
         id: windowProc
@@ -25,12 +26,15 @@ Item {
                     // 2. Compare window workspace with currently focused workspace
                     if (win && win.workspace && activeWs && win.workspace.id === activeWs) {
                         title = win.title || "~";
+                        isFullscreen = (win.fullscreen > 0);
                     } else {
                         title = "~";
+                        isFullscreen = false;
                     }
                 } catch (e) {
                     console.warn("Failed to parse active window data:", e);
                     title = "";
+                    isFullscreen = false;
                 }
             }
         }
