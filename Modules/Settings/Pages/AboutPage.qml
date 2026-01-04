@@ -1,19 +1,30 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+// Try standard module import first, but the relative import below ensures it works
+import qs.Services 
+import "../../../Services" as LocalServices
 
 Item {
     id: root
 
-    // --- Exposed Properties ---
-    property string distroName: "Arch Linux"
-    property string distroUrl: "https://archlinux.org/"
-    // Using Nerd Font icon as placeholder for the SVG/Image
-    property string distroIcon: "" 
+    // --- Automatic Distro Fetcher ---
+    // Uses the corrected service
+    LocalServices.DistroInfoService {
+        id: distroInfo
+    }
+
+    // --- Exposed Properties (Bound to Fetcher) ---
+    property string distroName: distroInfo.name
+    property string distroUrl: distroInfo.url
+    property string distroIcon: distroInfo.icon
+    
+    property string distroBugUrl: distroInfo.bugUrl !== "" ? distroInfo.bugUrl : distroInfo.url
+    property string distroSupportUrl: distroInfo.supportUrl !== "" ? distroInfo.supportUrl : distroInfo.url
     
     property string dotfilesName: "illogical-impulse"
     property string dotfilesUrl: "https://github.com/end-4/dots-hyprland"
-    property string dotfilesIcon: "" // Asterisk-like icon
+    property string dotfilesIcon: "" 
 
     // --- Theme Specification ---
     property color backgroundColor: "#1e1e2e" // Dark Base
@@ -45,17 +56,17 @@ Item {
                 anchors.topMargin: 24
                 anchors.bottomMargin: 24
                 
-                // 1. Distro Section
+                // 1. Distro Section (Dynamic Data)
                 AboutCard {
                     iconSource: root.distroIcon
                     titleText: root.distroName
                     linkUrl: root.distroUrl
                     
                     actions: [
-                        { icon: "", label: "Documentation", url: "https://wiki.archlinux.org/" },
-                        { icon: "", label: "Help & Support", url: "https://bbs.archlinux.org/" },
-                        { icon: "", label: "Report a Bug", url: "https://bugs.archlinux.org/" },
-                        { icon: "", label: "Privacy Policy", url: "https://terms.archlinux.org/docs/privacy-policy/" }
+                        { icon: "", label: "Website", url: root.distroUrl },
+                        { icon: "", label: "Support", url: root.distroSupportUrl },
+                        { icon: "", label: "Report Bug", url: root.distroBugUrl },
+                        { icon: "", label: "Privacy", url: root.distroUrl }
                     ]
                 }
 
@@ -66,9 +77,9 @@ Item {
                     linkUrl: root.dotfilesUrl
                     
                     actions: [
-                        { icon: "", label: "Documentation", url: root.dotfilesUrl + "#readme" },
+                        { icon: "", label: "Docs", url: root.dotfilesUrl + "#readme" },
                         { icon: "", label: "Issues", url: root.dotfilesUrl + "/issues" },
-                        { icon: "", label: "Discussions", url: root.dotfilesUrl + "/discussions" },
+                        { icon: "", label: "Discuss", url: root.dotfilesUrl + "/discussions" },
                         { icon: "", label: "Donate", url: "https://ko-fi.com/" }
                     ]
                 }
@@ -80,7 +91,7 @@ Item {
                     Layout.topMargin: 8
 
                     Text {
-                        text: "Contributors"
+                        text: "Core Developers"
                         font.pixelSize: 18
                         font.bold: true
                         color: root.textPrimary
@@ -88,16 +99,15 @@ Item {
                     }
 
                     GridLayout {
-                        columns: 2 // Two-column grid
+                        columns: 2 
                         columnSpacing: 16
                         rowSpacing: 16
                         Layout.fillWidth: true
 
-                        // Example Data
                         Repeater {
                             model: [
-                                { name: "John Doe", role: "Lead Developer", url: "https://github.com/johndoe" },
-                                { name: "Jane Smith", role: "UI/UX Designer", url: "https://github.com/janesmith" }
+                                { name: "Manpreet Vilasara", url: "https://github.com/mannuvilasara" },
+                                { name: "Keshav Gilhotra", url: "https://github.com/ikeshav26" }
                             ]
 
                             delegate: ContributorCard {
@@ -110,7 +120,6 @@ Item {
                     }
                 }
                 
-                // Spacer at bottom
                 Item { height: 24; Layout.fillWidth: true }
             }
         }
@@ -126,11 +135,9 @@ Item {
         property var actions: []
 
         Layout.fillWidth: true
-        implicitHeight: cardCol.implicitHeight + 48 // Internal padding
+        implicitHeight: cardCol.implicitHeight + 48 
         color: root.cardColor
         radius: root.cornerRadius
-        
-        // Subtle Shadow/Elevation
         border.width: 1
         border.color: Qt.rgba(1, 1, 1, 0.05)
 
@@ -140,12 +147,10 @@ Item {
             anchors.margins: 24
             spacing: 24
 
-            // Header: Icon + Title + Link
             RowLayout {
                 spacing: 20
                 Layout.fillWidth: true
 
-                // Icon Placeholder
                 Rectangle {
                     Layout.preferredWidth: 64
                     Layout.preferredHeight: 64
@@ -161,7 +166,6 @@ Item {
                     }
                 }
 
-                // Text Content
                 ColumnLayout {
                     spacing: 4
                     Layout.fillWidth: true
@@ -178,6 +182,8 @@ Item {
                         font.pixelSize: 14
                         color: root.accentColor
                         font.underline: urlHover.containsMouse
+                        elide: Text.ElideRight
+                        Layout.fillWidth: true
                         
                         MouseArea {
                             id: urlHover
@@ -190,14 +196,12 @@ Item {
                 }
             }
 
-            // Divider
             Rectangle {
                 Layout.fillWidth: true
                 height: 1
                 color: Qt.rgba(1, 1, 1, 0.1)
             }
 
-            // Action Buttons Row (Flow)
             Flow {
                 Layout.fillWidth: true
                 spacing: 12
@@ -207,12 +211,11 @@ Item {
                     delegate: Rectangle {
                         width: actionRow.implicitWidth + 32
                         height: 36
-                        radius: 18 // Pill shape
+                        radius: 18 
                         color: actionHover.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
                         border.width: 1
                         border.color: Qt.rgba(1, 1, 1, 0.1)
                         
-                        // Interaction
                         MouseArea {
                             id: actionHover
                             anchors.fill: parent
@@ -268,7 +271,6 @@ Item {
             anchors.margins: 16
             spacing: 16
             
-            // Avatar Placeholder (Circle)
             Rectangle {
                 width: 48; height: 48
                 radius: 24

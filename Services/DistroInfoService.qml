@@ -7,23 +7,27 @@ QtObject {
 
     property string name: "Linux"
     property string url: "https://kernel.org"
-    property string icon: "" // Default Tux
+    property string icon: "" // Default Tux icon
+    property string bugUrl: ""
+    property string supportUrl: ""
     property string distroId: ""
 
-    // Run cat /etc/os-release to get system info
+    property string _buffer: ""
+
+    // Execute cat /etc/os-release to get system details
     property var _proc: Process {
         command: ["cat", "/etc/os-release"]
         running: true
         
-        property string buffer: ""
-
-        onStdout: (data) => {
-            buffer += data
+        stdout: SplitParser {
+            onRead: (data) => {
+                root._buffer += data
+            }
         }
 
         onExited: (code) => {
             if (code === 0) {
-                root._parse(buffer)
+                root._parse(root._buffer)
             }
         }
     }
@@ -42,7 +46,7 @@ QtObject {
             const key = line.substring(0, eqIdx);
             let val = line.substring(eqIdx + 1);
             
-            // Remove quotes if present
+            // Strip quotes
             if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
                 val = val.substring(1, val.length - 1);
             }
@@ -50,15 +54,20 @@ QtObject {
             info[key] = val;
         }
 
-        // 1. Set Name
+        // 1. Name
         if (info["PRETTY_NAME"]) root.name = info["PRETTY_NAME"];
         else if (info["NAME"]) root.name = info["NAME"];
 
-        // 2. Set URL
+        // 2. URLs
         if (info["HOME_URL"]) root.url = info["HOME_URL"];
-        else if (info["SUPPORT_URL"]) root.url = info["SUPPORT_URL"];
+        
+        if (info["BUG_REPORT_URL"]) root.bugUrl = info["BUG_REPORT_URL"];
+        else root.bugUrl = root.url;
 
-        // 3. Set Icon (Map ID to Nerd Font)
+        if (info["SUPPORT_URL"]) root.supportUrl = info["SUPPORT_URL"];
+        else root.supportUrl = root.url;
+
+        // 3. Icon Mapping
         if (info["ID"]) {
             root.distroId = info["ID"];
             root.icon = _getIcon(info["ID"]);
@@ -89,14 +98,14 @@ QtObject {
         };
         
         const lowerId = id.toLowerCase();
-        // Check for exact match first
+        // Exact match
         if (map[lowerId]) return map[lowerId];
         
-        // Check for partial matches (e.g. opensuse-tumbleweed -> opensuse)
+        // Partial match
         for (let key in map) {
-            if (lowerId.includes(key)) return map[key];
+            if (lowerId.indexOf(key) !== -1) return map[key];
         }
         
-        return ""; // Tux fallback
+        return ""; // Fallback Tux
     }
 }
