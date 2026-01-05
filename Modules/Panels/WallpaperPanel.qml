@@ -233,8 +233,11 @@ PanelWindow {
                             id: img
 
                             readonly property string fileName: modelData.split('/').pop()
-                            readonly property string thumbSource: "file://" + WallpaperService.previewDirectory + "/" + fileName
+                            readonly property string fileExt: fileName.split('.').pop().toLowerCase()
+                            readonly property bool hasThumb: ["jpg", "jpeg", "png", "webp", "bmp"].includes(fileExt)
+                            readonly property string thumbPath: WallpaperService.previewDirectory + "/" + fileName
                             readonly property string originalSource: "file://" + modelData
+                            readonly property string thumbSource: hasThumb ? ("file://" + thumbPath) : originalSource
 
                             anchors.fill: parent
                             anchors.margins: card.border.width
