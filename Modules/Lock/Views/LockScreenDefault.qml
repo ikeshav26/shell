@@ -38,7 +38,7 @@ Item {
                 layer.enabled: true
 
                 layer.effect: FastBlur {
-                    radius: Config.disableLockBlur ? 0 : 128
+                    radius: 128
                 }
 
             }

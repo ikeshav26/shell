@@ -32,6 +32,8 @@ ColumnLayout {
                 Config.disableLockBlur = !active;
 
         }
+        enabled: Config.lockScreenCustomBackground
+        opacity: enabled ? 1 : 0.5
     }
 
     ToggleButton {

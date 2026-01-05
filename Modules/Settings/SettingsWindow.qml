@@ -34,8 +34,7 @@ FloatingWindow {
         anchors.fill: parent
         color: colors.bg
         radius: 16
-        border.width: 1
-        border.color: colors.border
+        border.width: 0
         clip: true
 
         RowLayout {
