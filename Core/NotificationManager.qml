@@ -74,7 +74,6 @@ Item {
             if (item.notifId === targetId) {
                  if (item.ref) {
                     try {
-                        // Look for a specific 'default' action to invoke
                         var nativeActions = item.ref.actions;
                         var defaultFound = false;
                         if (nativeActions) {
@@ -87,7 +86,7 @@ Item {
                             }
                         }
                         
-                        // Standard behavior: dismiss if clicked and no default action
+
                         root.removeById(targetId);
                     } catch (e) {
                          Logger.w("NotifMan", "Failed to activate: " + e);
@@ -113,12 +112,10 @@ Item {
                                 var nativeAction = nativeActions[k];
                                 var nativeId = "";
                                 
-                                // Extract ID from different possible formats
+
                                 if (typeof nativeAction === 'string') {
-                                    // String format "key=Label" - extract key
                                     nativeId = nativeAction.split('=')[0];
                                 } else if (nativeAction && typeof nativeAction === 'object') {
-                                    // Object format - try different property names
                                     nativeId = nativeAction.identifier || nativeAction.key || nativeAction.id || "";
                                 }
                                 
@@ -129,7 +126,6 @@ Item {
                                     if (typeof nativeAction.invoke === 'function') {
                                         nativeAction.invoke();
                                     } else {
-                                        // For string format, invoke with the key
                                         item.ref.invoke(actionId);
                                     }
                                     actionInvoked = true;
@@ -140,11 +136,10 @@ Item {
 
                         if (!actionInvoked) {
                             Logger.w("NotifMan", "Action ID '" + actionId + "' not found. Trying direct invoke...");
-                            // Fallback: try invoking directly on the notification with the action ID
                             item.ref.invoke(actionId);
                         }
 
-                        // Usually actions dismiss the notification
+
                         if (actionId !== "default") root.removeById(targetId);
                     } catch (e) {
                          Logger.w("NotifMan", "Failed to invoke action: " + e);
@@ -179,7 +174,7 @@ Item {
             notification.tracked = true;
             var uniqueId = root.notificationCounter++;
             
-            // Map actions purely as JS objects for UI display
+
             var mappedActions = [];
             if (notification.actions) {
                 for (var i = 0; i < notification.actions.length; i++) {
@@ -187,13 +182,12 @@ Item {
                     var safeId = "";
                     var safeLabel = "";
                     
-                    // Handle string format "key=Label" from notify-send
+                
                     if (typeof act === 'string') {
                         var parts = act.split('=');
                         safeId = parts[0] || "";
                         safeLabel = parts.length > 1 ? parts.slice(1).join('=') : safeId;
                     } else if (act && typeof act === 'object') {
-                        // Handle object format
                         safeId = (act.identifier || act.key || act.id || "").toString();
                         safeLabel = (act.text || act.label || act.name || safeId).toString();
                     }

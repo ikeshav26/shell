@@ -123,12 +123,12 @@ PanelWindow {
                     anchors.margins: 12
                     spacing: 8
 
-                    // Top part: Icon + Text + Timer
+                    
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 12
 
-                        // Icon
+                        
                         Rectangle {
                             Layout.preferredWidth: 40
                             Layout.preferredHeight: 40
@@ -164,7 +164,6 @@ PanelWindow {
                             }
                         }
 
-                        // Text content
                         ColumnLayout {
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignVCenter
@@ -192,7 +191,7 @@ PanelWindow {
                             }
                         }
 
-                        // Timer
+                        
                         Item {
                             Layout.preferredWidth: 24
                             Layout.preferredHeight: 24
@@ -240,10 +239,9 @@ PanelWindow {
                         }
                     }
 
-                    // Actions Buttons Row
+                    
                     RowLayout {
                         property var actionList: (typeof actions !== "undefined") ? actions : null
-                        // Robust check for JS Array OR ListModel
                         visible: actionList && (
                              (typeof actionList.count === "number" && actionList.count > 0) || 
                              (typeof actionList.length === "number" && actionList.length > 0)
@@ -259,7 +257,6 @@ PanelWindow {
                             delegate: Rectangle {
                                 id: actionBtn
                                 
-                                // Determine ID and Label safely, handling both Array/ListModel formats
                                 property string btnId: {
                                     if (typeof modelData !== "undefined" && modelData.id) return modelData.id;
                                     if (typeof id !== "undefined") return id; 

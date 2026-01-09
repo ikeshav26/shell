@@ -44,12 +44,11 @@ Rectangle {
         anchors.margins: 12
         spacing: 8
 
-        // Header Row
         RowLayout {
             Layout.fillWidth: true
             spacing: 8
 
-            // App Icon
+            
             Rectangle {
                 Layout.preferredWidth: 20
                 Layout.preferredHeight: 20
@@ -84,7 +83,7 @@ Rectangle {
                 }
             }
 
-            // App Name
+
             Text {
                 text: appName || "System"
                 color: theme ? theme.subtext : "#9BA3B8"
@@ -94,27 +93,26 @@ Rectangle {
                 elide: Text.ElideRight
             }
 
-            // Time
+    
             Text {
                 text: time
                 color: theme ? theme.muted : "#5C606C"
                 font.pixelSize: 10
             }
 
-            // Chevron (Expand Indicator)
+            
             Text {
                 text: "󰁸"
                 color: theme ? theme.muted : "#5C606C"
                 font.pixelSize: 10
                 font.family: "Symbols Nerd Font"
                 rotation: expanded ? 180 : 0
-                // Check length/count safely
                 visible: actions && ( (actions.length && actions.length > 0) || (actions.count && actions.count > 0) )
                 
                 Behavior on rotation { NumberAnimation { duration: 200 } }
             }
 
-            // Close Button
+
             Rectangle {
                 Layout.preferredWidth: 20
                 Layout.preferredHeight: 20
@@ -141,7 +139,6 @@ Rectangle {
             }
         }
 
-        // Content Row
         RowLayout {
             Layout.fillWidth: true
             spacing: 12
@@ -171,7 +168,7 @@ Rectangle {
                     visible: text !== ""
                 }
 
-                // Actions Flow
+            
                 Flow {
                     Layout.fillWidth: true
                     spacing: 8
@@ -185,7 +182,6 @@ Rectangle {
                         
                         Rectangle {
                            required property var modelData
-                           // Safe access for ID and Label
                            property string btnId: {
                                if (typeof modelData !== "undefined" && modelData.id) return modelData.id;
                                if (typeof id !== "undefined") return id; 
@@ -220,7 +216,6 @@ Rectangle {
                                hoverEnabled: true
                                onClicked: {
                                    if (parent.btnId) {
-                                       // Pass the action ID up
                                        parent.parent.parent.parent.parent.actionClicked(parent.btnId)
                                    }
                                }
