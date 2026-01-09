@@ -30,13 +30,9 @@ Rectangle {
         cursorShape: Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: (mouse) => {
-            console.log("NotificationItem Clicked! Button:", mouse.button, "Right:", Qt.RightButton, "Left:", Qt.LeftButton)
             if (mouse.button === Qt.RightButton) {
-                console.log("Right click detected. Toggling expansion. Current:", parent.expanded)
                 parent.expanded = !parent.expanded;
-                console.log("New expansion:", parent.expanded)
             } else {
-                console.log("Left click detected. Activ ating.")
                 parent.clicked();
             }
         }
@@ -48,7 +44,7 @@ Rectangle {
         anchors.margins: 12
         spacing: 8
 
-        // Header Row: Icon, App Name, Time, Close
+        // Header Row
         RowLayout {
             Layout.fillWidth: true
             spacing: 8
@@ -57,7 +53,7 @@ Rectangle {
             Rectangle {
                 Layout.preferredWidth: 20
                 Layout.preferredHeight: 20
-                color: "transparent" // theme.tileActive
+                color: "transparent"
                 radius: 6
 
                 Image {
@@ -107,12 +103,13 @@ Rectangle {
 
             // Chevron (Expand Indicator)
             Text {
-                text: "󰁸" // Chevron down
+                text: "󰁸"
                 color: theme ? theme.muted : "#5C606C"
                 font.pixelSize: 10
                 font.family: "Symbols Nerd Font"
                 rotation: expanded ? 180 : 0
-                visible: actions && actions.length > 0
+                // Check length/count safely
+                visible: actions && ( (actions.length && actions.length > 0) || (actions.count && actions.count > 0) )
                 
                 Behavior on rotation { NumberAnimation { duration: 200 } }
             }
@@ -149,8 +146,6 @@ Rectangle {
             Layout.fillWidth: true
             spacing: 12
 
-            // Large Image (if available, otherwise hidden) - Optional logic could be added here to show image if different from icon
-            
             ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 2
@@ -180,7 +175,7 @@ Rectangle {
                 Flow {
                     Layout.fillWidth: true
                     spacing: 8
-                    visible: expanded && actions && actions.length > 0
+                    visible: expanded && actions && ( (actions.length && actions.length > 0) || (actions.count && actions.count > 0) )
                     opacity: visible ? 1 : 0
                     
                     Behavior on opacity { NumberAnimation { duration: 200 } }
@@ -190,6 +185,17 @@ Rectangle {
                         
                         Rectangle {
                            required property var modelData
+                           // Safe access for ID and Label
+                           property string btnId: {
+                               if (typeof modelData !== "undefined" && modelData.id) return modelData.id;
+                               if (typeof id !== "undefined") return id; 
+                               return ""; 
+                           }
+                           property string btnLabel: {
+                               if (typeof modelData !== "undefined" && modelData.label) return modelData.label;
+                               if (typeof label !== "undefined") return label; 
+                               return btnId; 
+                           }
                            
                            width: actionLabel.implicitWidth + 24
                            height: 28
@@ -201,7 +207,7 @@ Rectangle {
                            Text {
                                id: actionLabel
                                anchors.centerIn: parent
-                               text: modelData.label
+                               text: parent.btnLabel
                                color: actionMouse.containsMouse ? (theme ? theme.bg : "#FFFFFF") : (theme ? theme.text : "#E8EAF0")
                                font.pixelSize: 11
                                font.bold: true
@@ -213,8 +219,10 @@ Rectangle {
                                cursorShape: Qt.PointingHandCursor
                                hoverEnabled: true
                                onClicked: {
-                                   // Consume click so item doesn't activate
-                                   parent.parent.parent.parent.parent.actionClicked(modelData.id)
+                                   if (parent.btnId) {
+                                       // Pass the action ID up
+                                       parent.parent.parent.parent.parent.actionClicked(parent.btnId)
+                                   }
                                }
                            }
                            
@@ -225,5 +233,4 @@ Rectangle {
             }
         }
     }
-
 }

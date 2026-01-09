@@ -140,7 +140,7 @@ ColumnLayout {
 
         delegate: NotificationItem {
             width: ListView.view.width
-            notifId: model.id
+            notifId: model.notifId 
             summary: model.summary || ""
             body: model.body || ""
             image: model.image || ""
