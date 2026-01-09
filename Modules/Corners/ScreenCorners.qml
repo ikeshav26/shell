@@ -64,7 +64,7 @@ PanelWindow {
                     PauseAnimation { duration: 300 }
                     PropertyAction { target: topLeft; property: "anchors.topMargin"; value: barHeight }
                     PropertyAction { target: topLeft; property: "anchors.leftMargin"; value: -cornerSize }
-                    NumberAnimation { target: topLeft; property: "anchors.leftMargin"; to: 0; duration: 300; easing.type: Easing.OutQuad }
+                    NumberAnimation { target: topLeft; property: "anchors.leftMargin"; to: 0; duration: 200; easing.type: Easing.OutQuad }
                 }
             }
         ]
@@ -95,7 +95,7 @@ PanelWindow {
                     PauseAnimation { duration: 300 }
                     PropertyAction { target: topRight; property: "anchors.topMargin"; value: barHeight }
                     PropertyAction { target: topRight; property: "anchors.rightMargin"; value: -cornerSize }
-                    NumberAnimation { target: topRight; property: "anchors.rightMargin"; to: 0; duration: 300; easing.type: Easing.OutQuad }
+                    NumberAnimation { target: topRight; property: "anchors.rightMargin"; to: 0; duration: 200; easing.type: Easing.OutQuad }
                 }
             }
         ]
@@ -126,7 +126,7 @@ PanelWindow {
                     PauseAnimation { duration: 300 }
                     PropertyAction { target: bottomLeft; property: "anchors.bottomMargin"; value: barHeight }
                     PropertyAction { target: bottomLeft; property: "anchors.leftMargin"; value: -cornerSize }
-                    NumberAnimation { target: bottomLeft; property: "anchors.leftMargin"; to: 0; duration: 300; easing.type: Easing.OutQuad }
+                    NumberAnimation { target: bottomLeft; property: "anchors.leftMargin"; to: 0; duration: 200; easing.type: Easing.OutQuad }
                 }
             }
         ]
@@ -157,7 +157,7 @@ PanelWindow {
                     PauseAnimation { duration: 300 }
                     PropertyAction { target: bottomRight; property: "anchors.bottomMargin"; value: barHeight }
                     PropertyAction { target: bottomRight; property: "anchors.rightMargin"; value: -cornerSize }
-                    NumberAnimation { target: bottomRight; property: "anchors.rightMargin"; to: 0; duration: 300; easing.type: Easing.OutQuad }
+                    NumberAnimation { target: bottomRight; property: "anchors.rightMargin"; to: 0; duration: 200; easing.type: Easing.OutQuad }
                 }
             }
         ]
